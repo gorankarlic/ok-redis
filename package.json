@@ -1,0 +1,23 @@
+{
+  "author": "Goran Karlic (goran.karlic@gmail.com)",
+  "contributors": [],
+  "name": "ok-redis",
+  "private": true,
+  "license": "CC-BY-NC-SA-4.0",
+  "version": "0.9.0",
+  "dependencies": {},
+  "repository": "https://github.com/gorankarlic/ok-redis.git",
+  "scripts": {
+    "docs": "node_modules/.bin/jsdoc -r src",
+    "redis": "cd target && curl -o redis-4.0.9.tar.gz http://download.redis.io/releases/redis-4.0.9.tar.gz && tar xzf redis-4.0.9.tar.gz && cd redis-4.0.9 && make",
+    "test": "./node_modules/.bin/istanbul cover --dir ./target/coverage --include-all-sources --root ./src/main -x Commands.js ./node_modules/.bin/_mocha -- \"src/test/**/*Test.js\" -R spec"
+  },
+  "devDependencies": {
+    "istanbul": "1.0.0-alpha.2",
+    "jsdoc": "3.5.5",
+    "matcha": "0.7.0",
+    "measurestuff": "^0.3.0",
+    "mocha": "4.0.1",
+    "pngjs": "3.3.1"
+  }
+}
