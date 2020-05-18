@@ -168,7 +168,7 @@ class Client
      */
     onerror(error)
     {
-        //console.error("Redis client %s", error.stack);
+        console.error("Redis client %s", error.stack);
         throw error;
     }
 
@@ -211,7 +211,6 @@ class Client
      */
     retry(args, callback, error)
     {
-        console.log(error);
         if(callback === void(null))
         {
             throw error;

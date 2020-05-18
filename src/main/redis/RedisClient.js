@@ -38,7 +38,14 @@ class RedisClient extends Commands
      */
     connect(done)
     {
-        this._client.connect(done);
+        if(done === void null)
+        {
+            return new Promise((resolve, reject) => this._client.connect((err, result) => err === null ? resolve(result) : reject(err)));
+        }
+        else
+        {
+            this._client.connect(done);
+        }
     };
 
     /**
@@ -69,7 +76,14 @@ class RedisClient extends Commands
      */
     quit(done)
     {
-        this._client.quit(done);
+        if(done === void null)
+        {
+            return new Promise((resolve, reject) => this._client.quit((err, result) => err === null ? resolve(result) : reject(err)));
+        }
+        else
+        {
+            this._client.quit(done);
+        }
     }
 }
 

@@ -16,13 +16,6 @@ Commands.prototype.constructor = Commands;
 module.exports = Commands;
 
 /**
- * Redis asynchronous commands.
- *
- * @type AbstractClient
- */
-Commands.prototype.async = {};
-
-/**
  * Redis client that will run the commands.
  *
  * @type AbstractClient
@@ -36,14 +29,198 @@ Commands.prototype._client = null;
  */
 Commands.prototype._c = function(args)
 {
+    if(args[args.length - 1] instanceof Function)
+    {
+        return this._cc(args);
+    }
+    else
+    {
+        return this._cp(args);
+    }
+};
+
+/**
+ * Runs the the specified command arguments.
+ *
+ * @param {Array} args the command arguments.
+ */
+Commands.prototype._cc = function(args)
+{
     this._client.command(args);
+};
+
+/**
+ * Runs the the specified command arguments.
+ *
+ * @param {Array} args the command arguments.
+ */
+Commands.prototype._cp = function(args)
+{
+    return new Promise((resolve, reject) =>
+    {
+        args.push((err, result) => err === null ? resolve(result) : reject(err));
+        this._client.command(args);
+    });
+};
+
+/**
+ * ACL CAT [categoryname]
+ *
+ * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * List the ACL categories or the commands inside a category.
+ *
+ * @see http://redis.io/commands/acl
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * ACL DELUSER username [username ...]
+ *
+ * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Remove the specified ACL users and the associated rules.
+ *
+ * @see http://redis.io/commands/acl
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * ACL GENPASS [bits]
+ *
+ * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Generate a pseudorandom secure password to use for ACL users.
+ *
+ * @see http://redis.io/commands/acl
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * ACL LIST -
+ *
+ * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * List the current ACL rules in ACL config file format.
+ *
+ * @see http://redis.io/commands/acl
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * ACL LOAD -
+ *
+ * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Reload the ACLs from the configured ACL file.
+ *
+ * @see http://redis.io/commands/acl
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * ACL LOG [count or RESET]
+ *
+ * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * List latest events denied because of ACLs in place.
+ *
+ * @see http://redis.io/commands/acl
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * ACL SAVE -
+ *
+ * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Save the current ACL rules in the configured ACL file.
+ *
+ * @see http://redis.io/commands/acl
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * ACL SETUSER rule [rule ...]
+ *
+ * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Modify or create the rules for a specific ACL user.
+ *
+ * @see http://redis.io/commands/acl
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * ACL USERS -
+ *
+ * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * List the username of all the configured ACL rules.
+ *
+ * @see http://redis.io/commands/acl
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * ACL WHOAMI -
+ *
+ * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Return the name of the user associated to the current connection.
+ *
+ * @see http://redis.io/commands/acl
+ * @since 6.0.0
+ */
+Commands.prototype.acl = function()
+{
+    let args;
+    const len = arguments.length;
+    switch(len)
+    {
+        case 0:
+        {
+            throw new Error("ACL: wrong number of arguments");
+        }
+        case 1:
+        {
+            args = [0x0, "ACL", arguments[0]];
+            break;
+        }
+        case 2:
+        {
+            args = [0x0, "ACL", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x0;
+            args[1] = "ACL";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
+    }
+    return this._c(args);
 };
 
 /**
  * APPEND key value
  *
- * (write, denyoom)
- * (arity 3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Append a value to a key.
  *
@@ -57,19 +234,19 @@ Commands.prototype.append = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "APPEND", arg0, arg1]);
+        return this._cp([0x20000, "APPEND", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "APPEND", arg0, arg1, callback]);
+        this._cc([0x20000, "APPEND", arg0, arg1, callback]);
     }
 };
 
 /**
- * ASKING arg
+ * ASKING
  *
- * (fast)
- * (arity 1, first key 0, last key 0)
+ * (fast, 0, 0)
+ * (arity 1, first key 0, last key NaN)
  *
  * Help not available.
  *
@@ -81,44 +258,64 @@ Commands.prototype.asking = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "ASKING"]);
+        return this._cp([0x0, "ASKING"]);
     }
     else
     {
-        this._c([0x0, "ASKING", callback]);
+        this._cc([0x0, "ASKING", callback]);
     }
 };
 
 /**
  * AUTH password
  *
- * (noscript, loading, stale, fast)
- * (arity 2, first key 0, last key 0)
+ * (noscript, loading, stale, skip_monitor, skip_slowlog, fast, no_auth, 0, 0)
+ * (arity -2, first key 0, last key NaN)
  *
  * Authenticate to the server.
  *
- * @param {Object} arg0 the first argument.
- * @param {Function} callback the function to call when done.
  * @see http://redis.io/commands/auth
  * @since 1.0.0
  */
-Commands.prototype.auth = function(arg0, callback)
+Commands.prototype.auth = function()
 {
-    if(callback === void(0))
+    let args;
+    const len = arguments.length;
+    switch(len)
     {
-        this._c([0x0, "AUTH", arg0]);
+        case 0:
+        {
+            throw new Error("AUTH: wrong number of arguments");
+        }
+        case 1:
+        {
+            args = [0x0, "AUTH", arguments[0]];
+            break;
+        }
+        case 2:
+        {
+            args = [0x0, "AUTH", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x0;
+            args[1] = "AUTH";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
     }
-    else
-    {
-        this._c([0x0, "AUTH", arg0, callback]);
-    }
+    return this._c(args);
 };
 
 /**
  * BGREWRITEAOF -
  *
- * (admin)
- * (arity 1, first key 0, last key 0)
+ * (admin, noscript, 0, 0, 0)
+ * (arity 1, first key NaN, last key NaN)
  *
  * Asynchronously rewrite the append-only file.
  *
@@ -130,19 +327,19 @@ Commands.prototype.bgrewriteaof = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "BGREWRITEAOF"]);
+        return this._cp([0x0, "BGREWRITEAOF"]);
     }
     else
     {
-        this._c([0x0, "BGREWRITEAOF", callback]);
+        this._cc([0x0, "BGREWRITEAOF", callback]);
     }
 };
 
 /**
- * BGSAVE -
+ * BGSAVE [SCHEDULE]
  *
- * (admin)
- * (arity -1, first key 0, last key 0)
+ * (admin, noscript, 0, 0, 0)
+ * (arity -1, first key NaN, last key NaN)
  *
  * Asynchronously save the dataset to disk.
  *
@@ -181,14 +378,14 @@ Commands.prototype.bgsave = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * BITCOUNT key [start end]
  *
- * (readonly)
- * (arity -2, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Count set bits in a string.
  *
@@ -207,18 +404,18 @@ Commands.prototype.bitcount = function()
         }
         case 1:
         {
-            args = [0x10001, "BITCOUNT", arguments[0]];
+            args = [0x10000, "BITCOUNT", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "BITCOUNT", arguments[0], arguments[1]];
+            args = [0x10000, "BITCOUNT", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "BITCOUNT";
             for(let n = 0; n < len; n++)
             {
@@ -226,14 +423,14 @@ Commands.prototype.bitcount = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * BITFIELD key [GET type offset] [SET type offset value] [INCRBY type offset increment] [OVERFLOW WRAP|SAT|FAIL]
  *
- * (write, denyoom)
- * (arity -2, first key 1, last key 1)
+ * (write, denyoom, 1, 1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Perform arbitrary bitfield integer operations on strings.
  *
@@ -252,18 +449,18 @@ Commands.prototype.bitfield = function()
         }
         case 1:
         {
-            args = [0x20001, "BITFIELD", arguments[0]];
+            args = [0x20000, "BITFIELD", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x20001, "BITFIELD", arguments[0], arguments[1]];
+            args = [0x20000, "BITFIELD", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "BITFIELD";
             for(let n = 0; n < len; n++)
             {
@@ -271,14 +468,59 @@ Commands.prototype.bitfield = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
+};
+
+/**
+ * BITFIELD_RO key ...options...
+ *
+ * (readonly, fast, 1, 1, 1)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Help not available.
+ *
+ * @see http://redis.io/commands/bitfield_ro
+ * @since not known
+ */
+Commands.prototype.bitfield_ro = function()
+{
+    let args;
+    const len = arguments.length;
+    switch(len)
+    {
+        case 0:
+        {
+            throw new Error("BITFIELD_RO: wrong number of arguments");
+        }
+        case 1:
+        {
+            args = [0x10000, "BITFIELD_RO", arguments[0]];
+            break;
+        }
+        case 2:
+        {
+            args = [0x10000, "BITFIELD_RO", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x10000;
+            args[1] = "BITFIELD_RO";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
+    }
+    return this._c(args);
 };
 
 /**
  * BITOP operation destkey key [key ...]
  *
- * (write, denyoom)
- * (arity -4, first key 2, last key -1)
+ * (write, denyoom, 2, -1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Perform bitwise operations between strings.
  *
@@ -300,7 +542,7 @@ Commands.prototype.bitop = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20002;
+            args[0] = 0x20000;
             args[1] = "BITOP";
             for(let n = 0; n < len; n++)
             {
@@ -308,14 +550,14 @@ Commands.prototype.bitop = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * BITPOS key bit [start] [end]
  *
- * (readonly)
- * (arity -3, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Find first bit set or clear in a string.
  *
@@ -335,13 +577,13 @@ Commands.prototype.bitpos = function()
         }
         case 2:
         {
-            args = [0x10001, "BITPOS", arguments[0], arguments[1]];
+            args = [0x10000, "BITPOS", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "BITPOS";
             for(let n = 0; n < len; n++)
             {
@@ -349,14 +591,14 @@ Commands.prototype.bitpos = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * BLPOP key [key ...] timeout
  *
- * (write, noscript)
- * (arity -3, first key 1, last key -2)
+ * (write, noscript, 1, -2, 1, @write)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Remove and get the first element in a list, or block until one is available.
  *
@@ -376,13 +618,13 @@ Commands.prototype.blpop = function()
         }
         case 2:
         {
-            args = [0x20001, "BLPOP", arguments[0], arguments[1]];
+            args = [0x20000, "BLPOP", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "BLPOP";
             for(let n = 0; n < len; n++)
             {
@@ -390,14 +632,14 @@ Commands.prototype.blpop = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * BRPOP key [key ...] timeout
  *
- * (write, noscript)
- * (arity -3, first key 1, last key -2)
+ * (write, noscript, 1, -2, 1, @write)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Remove and get the last element in a list, or block until one is available.
  *
@@ -417,13 +659,13 @@ Commands.prototype.brpop = function()
         }
         case 2:
         {
-            args = [0x20001, "BRPOP", arguments[0], arguments[1]];
+            args = [0x20000, "BRPOP", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "BRPOP";
             for(let n = 0; n < len; n++)
             {
@@ -431,16 +673,16 @@ Commands.prototype.brpop = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * BRPOPLPUSH source destination timeout
  *
- * (write, denyoom, noscript)
- * (arity 4, first key 1, last key 2)
+ * (write, denyoom, noscript, 1, 2, 1, @write)
+ * (arity 4, first key NaN, last key NaN)
  *
- * Pop a value from a list, push it to another list and return it; or block until one is available.
+ * Pop an element from a list, push it to another list and return it; or block until one is available.
  *
  * @see http://redis.io/commands/brpoplpush
  * @since 2.2.0
@@ -460,7 +702,7 @@ Commands.prototype.brpoplpush = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "BRPOPLPUSH";
             for(let n = 0; n < len; n++)
             {
@@ -468,14 +710,108 @@ Commands.prototype.brpoplpush = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
+ * BZPOPMAX key [key ...] timeout
+ *
+ * (write, noscript, fast, 1, -2, 1, @write)
+ * (arity -3, first key NaN, last key NaN)
+ *
+ * Remove and return the member with the highest score from one or more sorted sets, or block until one is available.
+ *
+ * @see http://redis.io/commands/bzpopmax
+ * @since 5.0.0
+ */
+Commands.prototype.bzpopmax = function()
+{
+    let args;
+    const len = arguments.length;
+    switch(len)
+    {
+        case 0:
+        case 1:
+        {
+            throw new Error("BZPOPMAX: wrong number of arguments");
+        }
+        case 2:
+        {
+            args = [0x20000, "BZPOPMAX", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x20000;
+            args[1] = "BZPOPMAX";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
+    }
+    return this._c(args);
+};
+
+/**
+ * BZPOPMIN key [key ...] timeout
+ *
+ * (write, noscript, fast, 1, -2, 1, @write)
+ * (arity -3, first key NaN, last key NaN)
+ *
+ * Remove and return the member with the lowest score from one or more sorted sets, or block until one is available.
+ *
+ * @see http://redis.io/commands/bzpopmin
+ * @since 5.0.0
+ */
+Commands.prototype.bzpopmin = function()
+{
+    let args;
+    const len = arguments.length;
+    switch(len)
+    {
+        case 0:
+        case 1:
+        {
+            throw new Error("BZPOPMIN: wrong number of arguments");
+        }
+        case 2:
+        {
+            args = [0x20000, "BZPOPMIN", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x20000;
+            args[1] = "BZPOPMIN";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
+    }
+    return this._c(args);
+};
+
+/**
+ * CLIENT CACHING YES|NO
+ *
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Instruct the server about tracking or not keys in the next request.
+ *
+ * @see http://redis.io/commands/client
+ * @since 6.0.0
+ *
+ * ----
+ *
  * CLIENT GETNAME -
  *
- * (admin, noscript)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Get the current connection name.
  *
@@ -484,10 +820,34 @@ Commands.prototype.brpoplpush = function()
  *
  * ----
  *
+ * CLIENT GETREDIR -
+ *
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Get tracking notifications redirection client ID if any.
+ *
+ * @see http://redis.io/commands/client
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * CLIENT ID -
+ *
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Returns the client ID for the current connection.
+ *
+ * @see http://redis.io/commands/client
+ * @since 5.0.0
+ *
+ * ----
+ *
  * CLIENT KILL [ip:port] [ID client-id] [TYPE normal|master|slave|pubsub] [ADDR ip:port] [SKIPME yes/no]
  *
- * (admin, noscript)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Kill the connection of a client.
  *
@@ -496,10 +856,10 @@ Commands.prototype.brpoplpush = function()
  *
  * ----
  *
- * CLIENT LIST -
+ * CLIENT LIST [TYPE normal|master|replica|pubsub]
  *
- * (admin, noscript)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Get the list of client connections.
  *
@@ -510,8 +870,8 @@ Commands.prototype.brpoplpush = function()
  *
  * CLIENT PAUSE timeout
  *
- * (admin, noscript)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Stop processing commands from clients for some time.
  *
@@ -522,8 +882,8 @@ Commands.prototype.brpoplpush = function()
  *
  * CLIENT REPLY ON|OFF|SKIP
  *
- * (admin, noscript)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Instruct the server whether to reply to commands.
  *
@@ -534,13 +894,37 @@ Commands.prototype.brpoplpush = function()
  *
  * CLIENT SETNAME connection-name
  *
- * (admin, noscript)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Set the current connection name.
  *
  * @see http://redis.io/commands/client
  * @since 2.6.9
+ *
+ * ----
+ *
+ * CLIENT TRACKING ON|OFF [REDIRECT client-id] [PREFIX prefix] [BCAST] [OPTIN] [OPTOUT] [NOLOOP]
+ *
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Enable or disable server assisted client side caching support.
+ *
+ * @see http://redis.io/commands/client
+ * @since 6.0.0
+ *
+ * ----
+ *
+ * CLIENT UNBLOCK client-id [TIMEOUT|ERROR]
+ *
+ * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Unblock a client blocked in a blocking command from a different connection.
+ *
+ * @see http://redis.io/commands/client
+ * @since 5.0.0
  */
 Commands.prototype.client = function()
 {
@@ -573,14 +957,14 @@ Commands.prototype.client = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * CLUSTER ADDSLOTS slot [slot ...]
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Assign new hash slots to receiving node.
  *
@@ -589,10 +973,22 @@ Commands.prototype.client = function()
  *
  * ----
  *
+ * CLUSTER BUMPEPOCH -
+ *
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Advance the cluster config epoch.
+ *
+ * @see http://redis.io/commands/cluster
+ * @since 3.0.0
+ *
+ * ----
+ *
  * CLUSTER COUNT-FAILURE-REPORTS node-id
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Return the number of failure reports active for a given node.
  *
@@ -603,8 +999,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER COUNTKEYSINSLOT slot
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Return the number of local keys in the specified hash slot.
  *
@@ -615,8 +1011,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER DELSLOTS slot [slot ...]
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Set hash slots as unbound in receiving node.
  *
@@ -627,10 +1023,22 @@ Commands.prototype.client = function()
  *
  * CLUSTER FAILOVER [FORCE|TAKEOVER]
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
- * Forces a slave to perform a manual failover of its master.
+ * Forces a replica to perform a manual failover of its master.
+ *
+ * @see http://redis.io/commands/cluster
+ * @since 3.0.0
+ *
+ * ----
+ *
+ * CLUSTER FLUSHSLOTS -
+ *
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Delete a node's own slots information.
  *
  * @see http://redis.io/commands/cluster
  * @since 3.0.0
@@ -639,8 +1047,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER FORGET node-id
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Remove a node from the nodes table.
  *
@@ -651,8 +1059,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER GETKEYSINSLOT slot count
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Return local key names in the specified hash slot.
  *
@@ -663,8 +1071,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER INFO -
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Provides info about Redis Cluster node state.
  *
@@ -675,8 +1083,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER KEYSLOT key
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Returns the hash slot of the specified key.
  *
@@ -687,8 +1095,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER MEET ip port
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Force a node cluster to handshake with another node.
  *
@@ -697,10 +1105,22 @@ Commands.prototype.client = function()
  *
  * ----
  *
+ * CLUSTER MYID -
+ *
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Return the node id.
+ *
+ * @see http://redis.io/commands/cluster
+ * @since 3.0.0
+ *
+ * ----
+ *
  * CLUSTER NODES -
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Get Cluster config for the node.
  *
@@ -709,12 +1129,24 @@ Commands.prototype.client = function()
  *
  * ----
  *
+ * CLUSTER REPLICAS node-id
+ *
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * List replica nodes of the specified master node.
+ *
+ * @see http://redis.io/commands/cluster
+ * @since 5.0.0
+ *
+ * ----
+ *
  * CLUSTER REPLICATE node-id
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
- * Reconfigure a node as a slave of the specified master node.
+ * Reconfigure a node as a replica of the specified master node.
  *
  * @see http://redis.io/commands/cluster
  * @since 3.0.0
@@ -723,8 +1155,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER RESET [HARD|SOFT]
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Reset a Redis Cluster node.
  *
@@ -735,8 +1167,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER SAVECONFIG -
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Forces the node to save cluster state on disk.
  *
@@ -747,8 +1179,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER SET-CONFIG-EPOCH config-epoch
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Set the configuration epoch in a new node.
  *
@@ -759,8 +1191,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER SETSLOT slot IMPORTING|MIGRATING|STABLE|NODE [node-id]
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Bind a hash slot to a specific node.
  *
@@ -771,10 +1203,10 @@ Commands.prototype.client = function()
  *
  * CLUSTER SLAVES node-id
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
- * List slave nodes of the specified master node.
+ * List replica nodes of the specified master node.
  *
  * @see http://redis.io/commands/cluster
  * @since 3.0.0
@@ -783,8 +1215,8 @@ Commands.prototype.client = function()
  *
  * CLUSTER SLOTS -
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Get array of Cluster slot to node mappings.
  *
@@ -822,14 +1254,14 @@ Commands.prototype.cluster = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * COMMAND -
  *
- * (loading, stale)
- * (arity 0, first key 0, last key 0)
+ * (random, loading, stale, 0, 0)
+ * (arity -1, first key 0, last key NaN)
  *
  * Get array of Redis command details.
  *
@@ -840,8 +1272,8 @@ Commands.prototype.cluster = function()
  *
  * COMMAND COUNT -
  *
- * (loading, stale)
- * (arity 0, first key 0, last key 0)
+ * (random, loading, stale, 0, 0)
+ * (arity -1, first key 0, last key NaN)
  *
  * Get total number of Redis commands.
  *
@@ -852,8 +1284,8 @@ Commands.prototype.cluster = function()
  *
  * COMMAND GETKEYS -
  *
- * (loading, stale)
- * (arity 0, first key 0, last key 0)
+ * (random, loading, stale, 0, 0)
+ * (arity -1, first key 0, last key NaN)
  *
  * Extract keys given a full Redis command.
  *
@@ -864,8 +1296,8 @@ Commands.prototype.cluster = function()
  *
  * COMMAND INFO command-name [command-name ...]
  *
- * (loading, stale)
- * (arity 0, first key 0, last key 0)
+ * (random, loading, stale, 0, 0)
+ * (arity -1, first key 0, last key NaN)
  *
  * Get array of specific Redis command details.
  *
@@ -878,6 +1310,11 @@ Commands.prototype.command = function()
     const len = arguments.length;
     switch(len)
     {
+        case 0:
+        {
+            args = [0x0, "COMMAND"];
+            break;
+        }
         case 1:
         {
             args = [0x0, "COMMAND", arguments[0]];
@@ -899,14 +1336,14 @@ Commands.prototype.command = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * CONFIG GET parameter
  *
- * (admin, loading, stale)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Get the value of a configuration parameter.
  *
@@ -917,8 +1354,8 @@ Commands.prototype.command = function()
  *
  * CONFIG RESETSTAT -
  *
- * (admin, loading, stale)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Reset the stats returned by INFO.
  *
@@ -929,8 +1366,8 @@ Commands.prototype.command = function()
  *
  * CONFIG REWRITE -
  *
- * (admin, loading, stale)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Rewrite the configuration file with the in memory configuration.
  *
@@ -941,8 +1378,8 @@ Commands.prototype.command = function()
  *
  * CONFIG SET parameter value
  *
- * (admin, loading, stale)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Set a configuration parameter to the given value.
  *
@@ -980,14 +1417,14 @@ Commands.prototype.config = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * DBSIZE -
  *
- * (readonly, fast)
- * (arity 1, first key 0, last key 0)
+ * (readonly, fast, 0, 0, 0)
+ * (arity 1, first key NaN, last key NaN)
  *
  * Return the number of keys in the selected database.
  *
@@ -999,19 +1436,19 @@ Commands.prototype.dbsize = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10000, "DBSIZE"]);
+        return this._cp([0x10000, "DBSIZE"]);
     }
     else
     {
-        this._c([0x10000, "DBSIZE", callback]);
+        this._cc([0x10000, "DBSIZE", callback]);
     }
 };
 
 /**
  * DEBUG OBJECT key
  *
- * (admin, noscript)
- * (arity -1, first key 0, last key 0)
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Get debugging information about a key.
  *
@@ -1022,8 +1459,8 @@ Commands.prototype.dbsize = function(callback)
  *
  * DEBUG SEGFAULT -
  *
- * (admin, noscript)
- * (arity -1, first key 0, last key 0)
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Make the server crash.
  *
@@ -1038,8 +1475,7 @@ Commands.prototype.debug = function()
     {
         case 0:
         {
-            args = [0x0, "DEBUG"];
-            break;
+            throw new Error("DEBUG: wrong number of arguments");
         }
         case 1:
         {
@@ -1062,14 +1498,14 @@ Commands.prototype.debug = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * DECR key
  *
- * (write, denyoom, fast)
- * (arity 2, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Decrement the integer value of a key by one.
  *
@@ -1082,19 +1518,19 @@ Commands.prototype.decr = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "DECR", arg0]);
+        return this._cp([0x20000, "DECR", arg0]);
     }
     else
     {
-        this._c([0x20001, "DECR", arg0, callback]);
+        this._cc([0x20000, "DECR", arg0, callback]);
     }
 };
 
 /**
  * DECRBY key decrement
  *
- * (write, denyoom, fast)
- * (arity 3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Decrement the integer value of a key by the given number.
  *
@@ -1108,19 +1544,19 @@ Commands.prototype.decrby = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "DECRBY", arg0, arg1]);
+        return this._cp([0x20000, "DECRBY", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "DECRBY", arg0, arg1, callback]);
+        this._cc([0x20000, "DECRBY", arg0, arg1, callback]);
     }
 };
 
 /**
  * DEL key [key ...]
  *
- * (write)
- * (arity -2, first key 1, last key -1)
+ * (write, 1, -1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Delete a key.
  *
@@ -1139,18 +1575,18 @@ Commands.prototype.del = function()
         }
         case 1:
         {
-            args = [0x20001, "DEL", arguments[0]];
+            args = [0x20000, "DEL", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x20001, "DEL", arguments[0], arguments[1]];
+            args = [0x20000, "DEL", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "DEL";
             for(let n = 0; n < len; n++)
             {
@@ -1158,14 +1594,14 @@ Commands.prototype.del = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * DISCARD -
  *
- * (noscript, fast)
- * (arity 1, first key 0, last key 0)
+ * (noscript, loading, stale, fast, 0, 0)
+ * (arity 1, first key 0, last key NaN)
  *
  * Discard all commands issued after MULTI.
  *
@@ -1177,19 +1613,19 @@ Commands.prototype.discard = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "DISCARD"]);
+        return this._cp([0x0, "DISCARD"]);
     }
     else
     {
-        this._c([0x0, "DISCARD", callback]);
+        this._cc([0x0, "DISCARD", callback]);
     }
 };
 
 /**
  * DUMP key
  *
- * (readonly)
- * (arity 2, first key 1, last key 1)
+ * (readonly, random, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Return a serialized version of the value stored at the specified key.
  *
@@ -1202,19 +1638,19 @@ Commands.prototype.dump = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "DUMP", arg0]);
+        return this._cp([0x10000, "DUMP", arg0]);
     }
     else
     {
-        this._c([0x10001, "DUMP", arg0, callback]);
+        this._cc([0x10000, "DUMP", arg0, callback]);
     }
 };
 
 /**
  * ECHO message
  *
- * (fast)
- * (arity 2, first key 0, last key 0)
+ * (readonly, fast, 0, 0, 0)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Echo the given string.
  *
@@ -1227,19 +1663,19 @@ Commands.prototype.echo = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "ECHO", arg0]);
+        return this._cp([0x10000, "ECHO", arg0]);
     }
     else
     {
-        this._c([0x0, "ECHO", arg0, callback]);
+        this._cc([0x10000, "ECHO", arg0, callback]);
     }
 };
 
 /**
  * EVAL script numkeys key [key ...] arg [arg ...]
  *
- * (noscript, movablekeys)
- * (arity -3, first key 0, last key 0)
+ * (noscript, movablekeys, 0, 0)
+ * (arity -3, first key 0, last key NaN)
  *
  * Execute a Lua script server side.
  *
@@ -1273,14 +1709,14 @@ Commands.prototype.eval = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * EVALSHA sha1 numkeys key [key ...] arg [arg ...]
  *
- * (noscript, movablekeys)
- * (arity -3, first key 0, last key 0)
+ * (noscript, movablekeys, 0, 0)
+ * (arity -3, first key 0, last key NaN)
  *
  * Execute a Lua script server side.
  *
@@ -1314,14 +1750,14 @@ Commands.prototype.evalsha = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * EXEC -
  *
- * (noscript, skip_monitor)
- * (arity 1, first key 0, last key 0)
+ * (noscript, loading, stale, skip_monitor, skip_slowlog, 0, 0)
+ * (arity 1, first key 0, last key NaN)
  *
  * Execute all commands issued after MULTI.
  *
@@ -1333,19 +1769,19 @@ Commands.prototype.exec = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "EXEC"]);
+        return this._cp([0x0, "EXEC"]);
     }
     else
     {
-        this._c([0x0, "EXEC", callback]);
+        this._cc([0x0, "EXEC", callback]);
     }
 };
 
 /**
  * EXISTS key [key ...]
  *
- * (readonly, fast)
- * (arity -2, first key 1, last key -1)
+ * (readonly, fast, 1, -1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Determine if a key exists.
  *
@@ -1364,18 +1800,18 @@ Commands.prototype.exists = function()
         }
         case 1:
         {
-            args = [0x10001, "EXISTS", arguments[0]];
+            args = [0x10000, "EXISTS", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "EXISTS", arguments[0], arguments[1]];
+            args = [0x10000, "EXISTS", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "EXISTS";
             for(let n = 0; n < len; n++)
             {
@@ -1383,14 +1819,14 @@ Commands.prototype.exists = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * EXPIRE key seconds
  *
- * (write, fast)
- * (arity 3, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Set a key's time to live in seconds.
  *
@@ -1404,19 +1840,19 @@ Commands.prototype.expire = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "EXPIRE", arg0, arg1]);
+        return this._cp([0x20000, "EXPIRE", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "EXPIRE", arg0, arg1, callback]);
+        this._cc([0x20000, "EXPIRE", arg0, arg1, callback]);
     }
 };
 
 /**
  * EXPIREAT key timestamp
  *
- * (write, fast)
- * (arity 3, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Set the expiration for a key as a UNIX timestamp.
  *
@@ -1430,19 +1866,19 @@ Commands.prototype.expireat = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "EXPIREAT", arg0, arg1]);
+        return this._cp([0x20000, "EXPIREAT", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "EXPIREAT", arg0, arg1, callback]);
+        this._cc([0x20000, "EXPIREAT", arg0, arg1, callback]);
     }
 };
 
 /**
- * FLUSHALL -
+ * FLUSHALL [ASYNC]
  *
- * (write)
- * (arity -1, first key 0, last key 0)
+ * (write, 0, 0, 0, @keyspace)
+ * (arity -1, first key NaN, last key NaN)
  *
  * Remove all keys from all databases.
  *
@@ -1481,14 +1917,14 @@ Commands.prototype.flushall = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * FLUSHDB -
+ * FLUSHDB [ASYNC]
  *
- * (write)
- * (arity -1, first key 0, last key 0)
+ * (write, 0, 0, 0, @keyspace)
+ * (arity -1, first key NaN, last key NaN)
  *
  * Remove all keys from the current database.
  *
@@ -1527,14 +1963,14 @@ Commands.prototype.flushdb = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * GEOADD key longitude latitude member [longitude latitude member ...]
  *
- * (write, denyoom)
- * (arity -5, first key 1, last key 1)
+ * (write, denyoom, 1, 1, 1)
+ * (arity -5, first key NaN, last key NaN)
  *
  * Add one or more geospatial items in the geospatial index represented using a sorted set.
  *
@@ -1557,7 +1993,7 @@ Commands.prototype.geoadd = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "GEOADD";
             for(let n = 0; n < len; n++)
             {
@@ -1565,14 +2001,14 @@ Commands.prototype.geoadd = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * GEODIST key member1 member2 [unit]
+ * GEODIST key member1 member2 [m|km|ft|mi]
  *
- * (readonly)
- * (arity -4, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Returns the distance between two members of a geospatial index.
  *
@@ -1594,7 +2030,7 @@ Commands.prototype.geodist = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "GEODIST";
             for(let n = 0; n < len; n++)
             {
@@ -1602,14 +2038,14 @@ Commands.prototype.geodist = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * GEOHASH key member [member ...]
  *
- * (readonly)
- * (arity -2, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Returns members of a geospatial index as standard geohash strings.
  *
@@ -1628,18 +2064,18 @@ Commands.prototype.geohash = function()
         }
         case 1:
         {
-            args = [0x10001, "GEOHASH", arguments[0]];
+            args = [0x10000, "GEOHASH", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "GEOHASH", arguments[0], arguments[1]];
+            args = [0x10000, "GEOHASH", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "GEOHASH";
             for(let n = 0; n < len; n++)
             {
@@ -1647,14 +2083,14 @@ Commands.prototype.geohash = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * GEOPOS key member [member ...]
  *
- * (readonly)
- * (arity -2, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Returns longitude and latitude of members of a geospatial index.
  *
@@ -1673,18 +2109,18 @@ Commands.prototype.geopos = function()
         }
         case 1:
         {
-            args = [0x10001, "GEOPOS", arguments[0]];
+            args = [0x10000, "GEOPOS", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "GEOPOS", arguments[0], arguments[1]];
+            args = [0x10000, "GEOPOS", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "GEOPOS";
             for(let n = 0; n < len; n++)
             {
@@ -1692,14 +2128,14 @@ Commands.prototype.geopos = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * GEORADIUS key longitude latitude radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count] [ASC|DESC] [STORE key] [STOREDIST key]
  *
- * (write, movablekeys)
- * (arity -6, first key 1, last key 1)
+ * (write, movablekeys, 1, 1, 1)
+ * (arity -6, first key NaN, last key NaN)
  *
  * Query a sorted set representing a geospatial index to fetch members matching a given maximum distance from a point.
  *
@@ -1723,7 +2159,7 @@ Commands.prototype.georadius = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "GEORADIUS";
             for(let n = 0; n < len; n++)
             {
@@ -1731,14 +2167,14 @@ Commands.prototype.georadius = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * GEORADIUS_RO key arg arg arg arg arg ...options...
+ * GEORADIUS_RO key arg arg arg arg ...options...
  *
- * (readonly, movablekeys)
- * (arity -6, first key 1, last key 1)
+ * (readonly, movablekeys, 1, 1, 1)
+ * (arity -6, first key NaN, last key NaN)
  *
  * Help not available.
  *
@@ -1762,7 +2198,7 @@ Commands.prototype.georadius_ro = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "GEORADIUS_RO";
             for(let n = 0; n < len; n++)
             {
@@ -1770,14 +2206,14 @@ Commands.prototype.georadius_ro = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * GEORADIUSBYMEMBER key member radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count] [ASC|DESC] [STORE key] [STOREDIST key]
  *
- * (write, movablekeys)
- * (arity -5, first key 1, last key 1)
+ * (write, movablekeys, 1, 1, 1)
+ * (arity -5, first key NaN, last key NaN)
  *
  * Query a sorted set representing a geospatial index to fetch members matching a given maximum distance from a member.
  *
@@ -1800,7 +2236,7 @@ Commands.prototype.georadiusbymember = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "GEORADIUSBYMEMBER";
             for(let n = 0; n < len; n++)
             {
@@ -1808,14 +2244,14 @@ Commands.prototype.georadiusbymember = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * GEORADIUSBYMEMBER_RO key arg arg arg arg ...options...
+ * GEORADIUSBYMEMBER_RO key arg arg arg ...options...
  *
- * (readonly, movablekeys)
- * (arity -5, first key 1, last key 1)
+ * (readonly, movablekeys, 1, 1, 1)
+ * (arity -5, first key NaN, last key NaN)
  *
  * Help not available.
  *
@@ -1838,7 +2274,7 @@ Commands.prototype.georadiusbymember_ro = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "GEORADIUSBYMEMBER_RO";
             for(let n = 0; n < len; n++)
             {
@@ -1846,14 +2282,14 @@ Commands.prototype.georadiusbymember_ro = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * GET key
  *
- * (readonly, fast)
- * (arity 2, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get the value of a key.
  *
@@ -1866,19 +2302,19 @@ Commands.prototype.get = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "GET", arg0]);
+        return this._cp([0x10000, "GET", arg0]);
     }
     else
     {
-        this._c([0x10001, "GET", arg0, callback]);
+        this._cc([0x10000, "GET", arg0, callback]);
     }
 };
 
 /**
  * GETBIT key offset
  *
- * (readonly, fast)
- * (arity 3, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Returns the bit value at offset in the string value stored at key.
  *
@@ -1892,19 +2328,19 @@ Commands.prototype.getbit = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "GETBIT", arg0, arg1]);
+        return this._cp([0x10000, "GETBIT", arg0, arg1]);
     }
     else
     {
-        this._c([0x10001, "GETBIT", arg0, arg1, callback]);
+        this._cc([0x10000, "GETBIT", arg0, arg1, callback]);
     }
 };
 
 /**
  * GETRANGE key start end
  *
- * (readonly)
- * (arity 4, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Get a substring of the string stored at a key.
  *
@@ -1926,7 +2362,7 @@ Commands.prototype.getrange = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "GETRANGE";
             for(let n = 0; n < len; n++)
             {
@@ -1934,14 +2370,14 @@ Commands.prototype.getrange = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * GETSET key value
  *
- * (write, denyoom)
- * (arity 3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Set the string value of a key and return its old value.
  *
@@ -1955,19 +2391,19 @@ Commands.prototype.getset = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "GETSET", arg0, arg1]);
+        return this._cp([0x20000, "GETSET", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "GETSET", arg0, arg1, callback]);
+        this._cc([0x20000, "GETSET", arg0, arg1, callback]);
     }
 };
 
 /**
  * HDEL key field [field ...]
  *
- * (write, fast)
- * (arity -3, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Delete one or more hash fields.
  *
@@ -1987,13 +2423,13 @@ Commands.prototype.hdel = function()
         }
         case 2:
         {
-            args = [0x20001, "HDEL", arguments[0], arguments[1]];
+            args = [0x20000, "HDEL", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "HDEL";
             for(let n = 0; n < len; n++)
             {
@@ -2001,14 +2437,59 @@ Commands.prototype.hdel = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
+};
+
+/**
+ * HELLO protover [AUTH username password] [SETNAME clientname]
+ *
+ * (noscript, loading, stale, skip_monitor, skip_slowlog, fast, no_auth, 0, 0)
+ * (arity -2, first key 0, last key NaN)
+ *
+ * switch Redis protocol.
+ *
+ * @see http://redis.io/commands/hello
+ * @since 6.0.0
+ */
+Commands.prototype.hello = function()
+{
+    let args;
+    const len = arguments.length;
+    switch(len)
+    {
+        case 0:
+        {
+            throw new Error("HELLO: wrong number of arguments");
+        }
+        case 1:
+        {
+            args = [0x0, "HELLO", arguments[0]];
+            break;
+        }
+        case 2:
+        {
+            args = [0x0, "HELLO", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x0;
+            args[1] = "HELLO";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
+    }
+    return this._c(args);
 };
 
 /**
  * HEXISTS key field
  *
- * (readonly, fast)
- * (arity 3, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Determine if a hash field exists.
  *
@@ -2022,19 +2503,19 @@ Commands.prototype.hexists = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "HEXISTS", arg0, arg1]);
+        return this._cp([0x10000, "HEXISTS", arg0, arg1]);
     }
     else
     {
-        this._c([0x10001, "HEXISTS", arg0, arg1, callback]);
+        this._cc([0x10000, "HEXISTS", arg0, arg1, callback]);
     }
 };
 
 /**
  * HGET key field
  *
- * (readonly, fast)
- * (arity 3, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Get the value of a hash field.
  *
@@ -2048,19 +2529,19 @@ Commands.prototype.hget = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "HGET", arg0, arg1]);
+        return this._cp([0x10000, "HGET", arg0, arg1]);
     }
     else
     {
-        this._c([0x10001, "HGET", arg0, arg1, callback]);
+        this._cc([0x10000, "HGET", arg0, arg1, callback]);
     }
 };
 
 /**
  * HGETALL key
  *
- * (readonly)
- * (arity 2, first key 1, last key 1)
+ * (readonly, random, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get all the fields and values in a hash.
  *
@@ -2073,19 +2554,19 @@ Commands.prototype.hgetall = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "HGETALL", arg0]);
+        return this._cp([0x10000, "HGETALL", arg0]);
     }
     else
     {
-        this._c([0x10001, "HGETALL", arg0, callback]);
+        this._cc([0x10000, "HGETALL", arg0, callback]);
     }
 };
 
 /**
  * HINCRBY key field increment
  *
- * (write, denyoom, fast)
- * (arity 4, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Increment the integer value of a hash field by the given number.
  *
@@ -2107,7 +2588,7 @@ Commands.prototype.hincrby = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "HINCRBY";
             for(let n = 0; n < len; n++)
             {
@@ -2115,14 +2596,14 @@ Commands.prototype.hincrby = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * HINCRBYFLOAT key field increment
  *
- * (write, denyoom, fast)
- * (arity 4, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Increment the float value of a hash field by the given amount.
  *
@@ -2144,7 +2625,7 @@ Commands.prototype.hincrbyfloat = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "HINCRBYFLOAT";
             for(let n = 0; n < len; n++)
             {
@@ -2152,14 +2633,14 @@ Commands.prototype.hincrbyfloat = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * HKEYS key
  *
- * (readonly, sort_for_script)
- * (arity 2, first key 1, last key 1)
+ * (readonly, sort_for_script, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get all the fields in a hash.
  *
@@ -2172,19 +2653,19 @@ Commands.prototype.hkeys = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "HKEYS", arg0]);
+        return this._cp([0x10000, "HKEYS", arg0]);
     }
     else
     {
-        this._c([0x10001, "HKEYS", arg0, callback]);
+        this._cc([0x10000, "HKEYS", arg0, callback]);
     }
 };
 
 /**
  * HLEN key
  *
- * (readonly, fast)
- * (arity 2, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get the number of fields in a hash.
  *
@@ -2197,19 +2678,19 @@ Commands.prototype.hlen = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "HLEN", arg0]);
+        return this._cp([0x10000, "HLEN", arg0]);
     }
     else
     {
-        this._c([0x10001, "HLEN", arg0, callback]);
+        this._cc([0x10000, "HLEN", arg0, callback]);
     }
 };
 
 /**
  * HMGET key field [field ...]
  *
- * (readonly, fast)
- * (arity -3, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Get the values of all the given hash fields.
  *
@@ -2229,13 +2710,13 @@ Commands.prototype.hmget = function()
         }
         case 2:
         {
-            args = [0x10001, "HMGET", arguments[0], arguments[1]];
+            args = [0x10000, "HMGET", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "HMGET";
             for(let n = 0; n < len; n++)
             {
@@ -2243,14 +2724,14 @@ Commands.prototype.hmget = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * HMSET key field value [field value ...]
  *
- * (write, denyoom, fast)
- * (arity -4, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Set multiple hash fields to multiple values.
  *
@@ -2272,7 +2753,7 @@ Commands.prototype.hmset = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "HMSET";
             for(let n = 0; n < len; n++)
             {
@@ -2280,14 +2761,14 @@ Commands.prototype.hmset = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * HOST: arg ...options...
+ * HOST: ...options...
  *
- * (loading, stale)
- * (arity -1, first key 0, last key 0)
+ * (readonly, loading, stale, 0, 0)
+ * (arity -1, first key 0, last key NaN)
  *
  * Help not available.
  *
@@ -2302,23 +2783,23 @@ Commands.prototype.host = function()
     {
         case 0:
         {
-            args = [0x0, "HOST:"];
+            args = [0x10000, "HOST:"];
             break;
         }
         case 1:
         {
-            args = [0x0, "HOST:", arguments[0]];
+            args = [0x10000, "HOST:", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x0, "HOST:", arguments[0], arguments[1]];
+            args = [0x10000, "HOST:", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x0;
+            args[0] = 0x10000;
             args[1] = "HOST:";
             for(let n = 0; n < len; n++)
             {
@@ -2326,14 +2807,14 @@ Commands.prototype.host = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * HSCAN key cursor [MATCH pattern] [COUNT count]
  *
- * (readonly, random)
- * (arity -3, first key 1, last key 1)
+ * (readonly, random, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Incrementally iterate hash fields and associated values.
  *
@@ -2353,13 +2834,13 @@ Commands.prototype.hscan = function()
         }
         case 2:
         {
-            args = [0x10001, "HSCAN", arguments[0], arguments[1]];
+            args = [0x10000, "HSCAN", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "HSCAN";
             for(let n = 0; n < len; n++)
             {
@@ -2367,14 +2848,14 @@ Commands.prototype.hscan = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * HSET key field value
+ * HSET key field value [field value ...]
  *
- * (write, denyoom, fast)
- * (arity -4, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Set the string value of a hash field.
  *
@@ -2396,7 +2877,7 @@ Commands.prototype.hset = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "HSET";
             for(let n = 0; n < len; n++)
             {
@@ -2404,14 +2885,14 @@ Commands.prototype.hset = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * HSETNX key field value
  *
- * (write, denyoom, fast)
- * (arity 4, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Set the value of a hash field, only if the field does not exist.
  *
@@ -2433,7 +2914,7 @@ Commands.prototype.hsetnx = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "HSETNX";
             for(let n = 0; n < len; n++)
             {
@@ -2441,14 +2922,14 @@ Commands.prototype.hsetnx = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * HSTRLEN key field
  *
- * (readonly, fast)
- * (arity 3, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Get the length of the value of a hash field.
  *
@@ -2462,19 +2943,19 @@ Commands.prototype.hstrlen = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "HSTRLEN", arg0, arg1]);
+        return this._cp([0x10000, "HSTRLEN", arg0, arg1]);
     }
     else
     {
-        this._c([0x10001, "HSTRLEN", arg0, arg1, callback]);
+        this._cc([0x10000, "HSTRLEN", arg0, arg1, callback]);
     }
 };
 
 /**
  * HVALS key
  *
- * (readonly, sort_for_script)
- * (arity 2, first key 1, last key 1)
+ * (readonly, sort_for_script, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get all the values in a hash.
  *
@@ -2487,19 +2968,19 @@ Commands.prototype.hvals = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "HVALS", arg0]);
+        return this._cp([0x10000, "HVALS", arg0]);
     }
     else
     {
-        this._c([0x10001, "HVALS", arg0, callback]);
+        this._cc([0x10000, "HVALS", arg0, callback]);
     }
 };
 
 /**
  * INCR key
  *
- * (write, denyoom, fast)
- * (arity 2, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Increment the integer value of a key by one.
  *
@@ -2512,19 +2993,19 @@ Commands.prototype.incr = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "INCR", arg0]);
+        return this._cp([0x20000, "INCR", arg0]);
     }
     else
     {
-        this._c([0x20001, "INCR", arg0, callback]);
+        this._cc([0x20000, "INCR", arg0, callback]);
     }
 };
 
 /**
  * INCRBY key increment
  *
- * (write, denyoom, fast)
- * (arity 3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Increment the integer value of a key by the given amount.
  *
@@ -2538,19 +3019,19 @@ Commands.prototype.incrby = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "INCRBY", arg0, arg1]);
+        return this._cp([0x20000, "INCRBY", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "INCRBY", arg0, arg1, callback]);
+        this._cc([0x20000, "INCRBY", arg0, arg1, callback]);
     }
 };
 
 /**
  * INCRBYFLOAT key increment
  *
- * (write, denyoom, fast)
- * (arity 3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Increment the float value of a key by the given amount.
  *
@@ -2564,19 +3045,19 @@ Commands.prototype.incrbyfloat = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "INCRBYFLOAT", arg0, arg1]);
+        return this._cp([0x20000, "INCRBYFLOAT", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "INCRBYFLOAT", arg0, arg1, callback]);
+        this._cc([0x20000, "INCRBYFLOAT", arg0, arg1, callback]);
     }
 };
 
 /**
  * INFO [section]
  *
- * (loading, stale)
- * (arity -1, first key 0, last key 0)
+ * (random, loading, stale, 0, 0)
+ * (arity -1, first key 0, last key NaN)
  *
  * Get information and statistics about the server.
  *
@@ -2615,14 +3096,14 @@ Commands.prototype.info = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * KEYS pattern
  *
- * (readonly, sort_for_script)
- * (arity 2, first key 0, last key 0)
+ * (readonly, sort_for_script, 0, 0, 0, @keyspace)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Find all keys matching the given pattern.
  *
@@ -2635,19 +3116,19 @@ Commands.prototype.keys = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10000, "KEYS", arg0]);
+        return this._cp([0x10000, "KEYS", arg0]);
     }
     else
     {
-        this._c([0x10000, "KEYS", arg0, callback]);
+        this._cc([0x10000, "KEYS", arg0, callback]);
     }
 };
 
 /**
  * LASTSAVE -
  *
- * (random, fast)
- * (arity 1, first key 0, last key 0)
+ * (readonly, random, loading, stale, fast, 0, 0, 0, @read)
+ * (arity 1, first key NaN, last key NaN)
  *
  * Get the UNIX time stamp of the last successful save to disk.
  *
@@ -2659,24 +3140,84 @@ Commands.prototype.lastsave = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "LASTSAVE"]);
+        return this._cp([0x10000, "LASTSAVE"]);
     }
     else
     {
-        this._c([0x0, "LASTSAVE", callback]);
+        this._cc([0x10000, "LASTSAVE", callback]);
     }
 };
 
 /**
- * LATENCY arg arg ...options...
+ * LATENCY DOCTOR -
  *
- * (admin, noscript, loading, stale)
- * (arity -2, first key 0, last key 0)
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
- * Help not available.
+ * Return a human readable latency analysis report.
  *
  * @see http://redis.io/commands/latency
- * @since not known
+ * @since 2.8.13
+ *
+ * ----
+ *
+ * LATENCY GRAPH event
+ *
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Return a latency graph for the event.
+ *
+ * @see http://redis.io/commands/latency
+ * @since 2.8.13
+ *
+ * ----
+ *
+ * LATENCY HELP -
+ *
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Show helpful text about the different subcommands.
+ *
+ * @see http://redis.io/commands/latency
+ * @since 2.8.13
+ *
+ * ----
+ *
+ * LATENCY HISTORY event
+ *
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Return timestamp-latency samples for the event.
+ *
+ * @see http://redis.io/commands/latency
+ * @since 2.8.13
+ *
+ * ----
+ *
+ * LATENCY LATEST -
+ *
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Return the latest latency samples for all events.
+ *
+ * @see http://redis.io/commands/latency
+ * @since 2.8.13
+ *
+ * ----
+ *
+ * LATENCY RESET [event]
+ *
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Reset latency data for one or more events.
+ *
+ * @see http://redis.io/commands/latency
+ * @since 2.8.13
  */
 Commands.prototype.latency = function()
 {
@@ -2709,14 +3250,14 @@ Commands.prototype.latency = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * LINDEX key index
  *
- * (readonly)
- * (arity 3, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Get an element from a list by its index.
  *
@@ -2730,19 +3271,19 @@ Commands.prototype.lindex = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "LINDEX", arg0, arg1]);
+        return this._cp([0x10000, "LINDEX", arg0, arg1]);
     }
     else
     {
-        this._c([0x10001, "LINDEX", arg0, arg1, callback]);
+        this._cc([0x10000, "LINDEX", arg0, arg1, callback]);
     }
 };
 
 /**
- * LINSERT key BEFORE|AFTER pivot value
+ * LINSERT key BEFORE|AFTER pivot element
  *
- * (write, denyoom)
- * (arity 5, first key 1, last key 1)
+ * (write, denyoom, 1, 1, 1)
+ * (arity 5, first key NaN, last key NaN)
  *
  * Insert an element before or after another element in a list.
  *
@@ -2765,7 +3306,7 @@ Commands.prototype.linsert = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "LINSERT";
             for(let n = 0; n < len; n++)
             {
@@ -2773,14 +3314,14 @@ Commands.prototype.linsert = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * LLEN key
  *
- * (readonly, fast)
- * (arity 2, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get the length of a list.
  *
@@ -2793,19 +3334,65 @@ Commands.prototype.llen = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "LLEN", arg0]);
+        return this._cp([0x10000, "LLEN", arg0]);
     }
     else
     {
-        this._c([0x10001, "LLEN", arg0, callback]);
+        this._cc([0x10000, "LLEN", arg0, callback]);
     }
+};
+
+/**
+ * LOLWUT [VERSION version]
+ *
+ * (readonly, fast, 0, 0)
+ * (arity -1, first key 0, last key NaN)
+ *
+ * Display some computer art and the Redis version.
+ *
+ * @see http://redis.io/commands/lolwut
+ * @since 5.0.0
+ */
+Commands.prototype.lolwut = function()
+{
+    let args;
+    const len = arguments.length;
+    switch(len)
+    {
+        case 0:
+        {
+            args = [0x10000, "LOLWUT"];
+            break;
+        }
+        case 1:
+        {
+            args = [0x10000, "LOLWUT", arguments[0]];
+            break;
+        }
+        case 2:
+        {
+            args = [0x10000, "LOLWUT", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x10000;
+            args[1] = "LOLWUT";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
+    }
+    return this._c(args);
 };
 
 /**
  * LPOP key
  *
- * (write, fast)
- * (arity 2, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Remove and get the first element in a list.
  *
@@ -2818,21 +3405,21 @@ Commands.prototype.lpop = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "LPOP", arg0]);
+        return this._cp([0x20000, "LPOP", arg0]);
     }
     else
     {
-        this._c([0x20001, "LPOP", arg0, callback]);
+        this._cc([0x20000, "LPOP", arg0, callback]);
     }
 };
 
 /**
- * LPUSH key value [value ...]
+ * LPUSH key element [element ...]
  *
- * (write, denyoom, fast)
- * (arity -3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
- * Prepend one or multiple values to a list.
+ * Prepend one or multiple elements to a list.
  *
  * @see http://redis.io/commands/lpush
  * @since 1.0.0
@@ -2850,13 +3437,13 @@ Commands.prototype.lpush = function()
         }
         case 2:
         {
-            args = [0x20001, "LPUSH", arguments[0], arguments[1]];
+            args = [0x20000, "LPUSH", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "LPUSH";
             for(let n = 0; n < len; n++)
             {
@@ -2864,16 +3451,16 @@ Commands.prototype.lpush = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * LPUSHX key value
+ * LPUSHX key element [element ...]
  *
- * (write, denyoom, fast)
- * (arity -3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
- * Prepend a value to a list, only if the list exists.
+ * Prepend an element to a list, only if the list exists.
  *
  * @see http://redis.io/commands/lpushx
  * @since 2.2.0
@@ -2891,13 +3478,13 @@ Commands.prototype.lpushx = function()
         }
         case 2:
         {
-            args = [0x20001, "LPUSHX", arguments[0], arguments[1]];
+            args = [0x20000, "LPUSHX", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "LPUSHX";
             for(let n = 0; n < len; n++)
             {
@@ -2905,14 +3492,14 @@ Commands.prototype.lpushx = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * LRANGE key start stop
  *
- * (readonly)
- * (arity 4, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Get a range of elements from a list.
  *
@@ -2934,7 +3521,7 @@ Commands.prototype.lrange = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "LRANGE";
             for(let n = 0; n < len; n++)
             {
@@ -2942,14 +3529,14 @@ Commands.prototype.lrange = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * LREM key count value
+ * LREM key count element
  *
- * (write)
- * (arity 4, first key 1, last key 1)
+ * (write, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Remove elements from a list.
  *
@@ -2971,7 +3558,7 @@ Commands.prototype.lrem = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "LREM";
             for(let n = 0; n < len; n++)
             {
@@ -2979,14 +3566,14 @@ Commands.prototype.lrem = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * LSET key index value
+ * LSET key index element
  *
- * (write, denyoom)
- * (arity 4, first key 1, last key 1)
+ * (write, denyoom, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Set the value of an element in a list by its index.
  *
@@ -3008,7 +3595,7 @@ Commands.prototype.lset = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "LSET";
             for(let n = 0; n < len; n++)
             {
@@ -3016,14 +3603,14 @@ Commands.prototype.lset = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * LTRIM key start stop
  *
- * (write)
- * (arity 4, first key 1, last key 1)
+ * (write, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Trim a list to the specified range.
  *
@@ -3045,7 +3632,7 @@ Commands.prototype.ltrim = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "LTRIM";
             for(let n = 0; n < len; n++)
             {
@@ -3053,19 +3640,79 @@ Commands.prototype.ltrim = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * MEMORY arg arg ...options...
+ * MEMORY DOCTOR -
  *
- * (readonly)
- * (arity -2, first key 0, last key 0)
+ * (readonly, random, movablekeys, 0, 0)
+ * (arity -2, first key 0, last key NaN)
  *
- * Help not available.
+ * Outputs memory problems report.
  *
  * @see http://redis.io/commands/memory
- * @since not known
+ * @since 4.0.0
+ *
+ * ----
+ *
+ * MEMORY HELP -
+ *
+ * (readonly, random, movablekeys, 0, 0)
+ * (arity -2, first key 0, last key NaN)
+ *
+ * Show helpful text about the different subcommands.
+ *
+ * @see http://redis.io/commands/memory
+ * @since 4.0.0
+ *
+ * ----
+ *
+ * MEMORY MALLOC-STATS -
+ *
+ * (readonly, random, movablekeys, 0, 0)
+ * (arity -2, first key 0, last key NaN)
+ *
+ * Show allocator internal stats.
+ *
+ * @see http://redis.io/commands/memory
+ * @since 4.0.0
+ *
+ * ----
+ *
+ * MEMORY PURGE -
+ *
+ * (readonly, random, movablekeys, 0, 0)
+ * (arity -2, first key 0, last key NaN)
+ *
+ * Ask the allocator to release memory.
+ *
+ * @see http://redis.io/commands/memory
+ * @since 4.0.0
+ *
+ * ----
+ *
+ * MEMORY STATS -
+ *
+ * (readonly, random, movablekeys, 0, 0)
+ * (arity -2, first key 0, last key NaN)
+ *
+ * Show memory usage details.
+ *
+ * @see http://redis.io/commands/memory
+ * @since 4.0.0
+ *
+ * ----
+ *
+ * MEMORY USAGE key [SAMPLES count]
+ *
+ * (readonly, random, movablekeys, 0, 0)
+ * (arity -2, first key 0, last key NaN)
+ *
+ * Estimate the memory usage of a key.
+ *
+ * @see http://redis.io/commands/memory
+ * @since 4.0.0
  */
 Commands.prototype.memory = function()
 {
@@ -3098,14 +3745,14 @@ Commands.prototype.memory = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * MGET key [key ...]
  *
- * (readonly, fast)
- * (arity -2, first key 1, last key -1)
+ * (readonly, fast, 1, -1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Get the values of all the given keys.
  *
@@ -3124,18 +3771,18 @@ Commands.prototype.mget = function()
         }
         case 1:
         {
-            args = [0x10001, "MGET", arguments[0]];
+            args = [0x10000, "MGET", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "MGET", arguments[0], arguments[1]];
+            args = [0x10000, "MGET", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "MGET";
             for(let n = 0; n < len; n++)
             {
@@ -3143,14 +3790,14 @@ Commands.prototype.mget = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * MIGRATE host port key| destination-db timeout [COPY] [REPLACE] [KEYS key]
+ * MIGRATE host port key| destination-db timeout [COPY] [REPLACE] [AUTH password] [KEYS key]
  *
- * (write, movablekeys)
- * (arity -6, first key 0, last key 0)
+ * (write, random, movablekeys, 0, 0, 0, @keyspace)
+ * (arity -6, first key NaN, last key NaN)
  *
  * Atomically transfer a key from a Redis instance to another one.
  *
@@ -3182,19 +3829,43 @@ Commands.prototype.migrate = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * MODULE key arg ...options...
+ * MODULE LIST -
  *
- * (admin, noscript)
- * (arity -2, first key 1, last key 1)
+ * (admin, noscript, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
- * Help not available.
+ * List all modules loaded by the server.
  *
  * @see http://redis.io/commands/module
- * @since not known
+ * @since 4.0.0
+ *
+ * ----
+ *
+ * MODULE LOAD path [arg]
+ *
+ * (admin, noscript, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Load a module.
+ *
+ * @see http://redis.io/commands/module
+ * @since 4.0.0
+ *
+ * ----
+ *
+ * MODULE UNLOAD name
+ *
+ * (admin, noscript, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Unload a module.
+ *
+ * @see http://redis.io/commands/module
+ * @since 4.0.0
  */
 Commands.prototype.module = function()
 {
@@ -3208,18 +3879,18 @@ Commands.prototype.module = function()
         }
         case 1:
         {
-            args = [0x1, "MODULE", arguments[0]];
+            args = [0x0, "MODULE", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x1, "MODULE", arguments[0], arguments[1]];
+            args = [0x0, "MODULE", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x1;
+            args[0] = 0x0;
             args[1] = "MODULE";
             for(let n = 0; n < len; n++)
             {
@@ -3227,14 +3898,14 @@ Commands.prototype.module = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * MONITOR -
  *
- * (admin, noscript)
- * (arity 1, first key 0, last key 0)
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity 1, first key NaN, last key NaN)
  *
  * Listen for all requests received by the server in real time.
  *
@@ -3246,19 +3917,19 @@ Commands.prototype.monitor = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "MONITOR"]);
+        return this._cp([0x0, "MONITOR"]);
     }
     else
     {
-        this._c([0x0, "MONITOR", callback]);
+        this._cc([0x0, "MONITOR", callback]);
     }
 };
 
 /**
  * MOVE key db
  *
- * (write, fast)
- * (arity 3, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Move a key to another database.
  *
@@ -3272,19 +3943,19 @@ Commands.prototype.move = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "MOVE", arg0, arg1]);
+        return this._cp([0x20000, "MOVE", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "MOVE", arg0, arg1, callback]);
+        this._cc([0x20000, "MOVE", arg0, arg1, callback]);
     }
 };
 
 /**
  * MSET key value [key value ...]
  *
- * (write, denyoom)
- * (arity -3, first key 1, last key -1)
+ * (write, denyoom, 1, -1, 2)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Set multiple keys to multiple values.
  *
@@ -3304,13 +3975,13 @@ Commands.prototype.mset = function()
         }
         case 2:
         {
-            args = [0x20001, "MSET", arguments[0], arguments[1]];
+            args = [0x20000, "MSET", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "MSET";
             for(let n = 0; n < len; n++)
             {
@@ -3318,14 +3989,14 @@ Commands.prototype.mset = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * MSETNX key value [key value ...]
  *
- * (write, denyoom)
- * (arity -3, first key 1, last key -1)
+ * (write, denyoom, 1, -1, 2)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Set multiple keys to multiple values, only if none of the keys exist.
  *
@@ -3345,13 +4016,13 @@ Commands.prototype.msetnx = function()
         }
         case 2:
         {
-            args = [0x20001, "MSETNX", arguments[0], arguments[1]];
+            args = [0x20000, "MSETNX", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "MSETNX";
             for(let n = 0; n < len; n++)
             {
@@ -3359,14 +4030,14 @@ Commands.prototype.msetnx = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * MULTI -
  *
- * (noscript, fast)
- * (arity 1, first key 0, last key 0)
+ * (noscript, loading, stale, fast, 0, 0)
+ * (arity 1, first key 0, last key NaN)
  *
  * Mark the start of a transaction block.
  *
@@ -3378,45 +4049,64 @@ Commands.prototype.multi = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "MULTI"]);
+        return this._cp([0x0, "MULTI"]);
     }
     else
     {
-        this._c([0x0, "MULTI", callback]);
+        this._cc([0x0, "MULTI", callback]);
     }
 };
 
 /**
  * OBJECT subcommand [arguments [arguments ...]]
  *
- * (readonly)
- * (arity 3, first key 2, last key 2)
+ * (readonly, random, 2, 2, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Inspect the internals of Redis objects.
  *
- * @param {Object} arg0 the first argument.
- * @param {Object} arg1 the second argument.
- * @param {Function} callback the function to call when done.
  * @see http://redis.io/commands/object
  * @since 2.2.3
  */
-Commands.prototype.object = function(arg0, arg1, callback)
+Commands.prototype.object = function()
 {
-    if(callback === void(0))
+    let args;
+    const len = arguments.length;
+    switch(len)
     {
-        this._c([0x10002, "OBJECT", arg0, arg1]);
+        case 0:
+        {
+            throw new Error("OBJECT: wrong number of arguments");
+        }
+        case 1:
+        {
+            args = [0x10000, "OBJECT", arguments[0]];
+            break;
+        }
+        case 2:
+        {
+            args = [0x10000, "OBJECT", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x10000;
+            args[1] = "OBJECT";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
     }
-    else
-    {
-        this._c([0x10002, "OBJECT", arg0, arg1, callback]);
-    }
+    return this._c(args);
 };
 
 /**
  * PERSIST key
  *
- * (write, fast)
- * (arity 2, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Remove the expiration from a key.
  *
@@ -3429,19 +4119,19 @@ Commands.prototype.persist = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "PERSIST", arg0]);
+        return this._cp([0x20000, "PERSIST", arg0]);
     }
     else
     {
-        this._c([0x20001, "PERSIST", arg0, callback]);
+        this._cc([0x20000, "PERSIST", arg0, callback]);
     }
 };
 
 /**
  * PEXPIRE key milliseconds
  *
- * (write, fast)
- * (arity 3, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Set a key's time to live in milliseconds.
  *
@@ -3455,19 +4145,19 @@ Commands.prototype.pexpire = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "PEXPIRE", arg0, arg1]);
+        return this._cp([0x20000, "PEXPIRE", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "PEXPIRE", arg0, arg1, callback]);
+        this._cc([0x20000, "PEXPIRE", arg0, arg1, callback]);
     }
 };
 
 /**
  * PEXPIREAT key milliseconds-timestamp
  *
- * (write, fast)
- * (arity 3, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Set the expiration for a key as a UNIX timestamp specified in milliseconds.
  *
@@ -3481,19 +4171,19 @@ Commands.prototype.pexpireat = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "PEXPIREAT", arg0, arg1]);
+        return this._cp([0x20000, "PEXPIREAT", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "PEXPIREAT", arg0, arg1, callback]);
+        this._cc([0x20000, "PEXPIREAT", arg0, arg1, callback]);
     }
 };
 
 /**
  * PFADD key element [element ...]
  *
- * (write, denyoom, fast)
- * (arity -2, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Adds the specified elements to the specified HyperLogLog.
  *
@@ -3512,18 +4202,18 @@ Commands.prototype.pfadd = function()
         }
         case 1:
         {
-            args = [0x20001, "PFADD", arguments[0]];
+            args = [0x20000, "PFADD", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x20001, "PFADD", arguments[0], arguments[1]];
+            args = [0x20000, "PFADD", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "PFADD";
             for(let n = 0; n < len; n++)
             {
@@ -3531,14 +4221,14 @@ Commands.prototype.pfadd = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * PFCOUNT key [key ...]
  *
- * (readonly)
- * (arity -2, first key 1, last key -1)
+ * (readonly, 1, -1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Return the approximated cardinality of the set(s) observed by the HyperLogLog at key(s).
  *
@@ -3557,18 +4247,18 @@ Commands.prototype.pfcount = function()
         }
         case 1:
         {
-            args = [0x10001, "PFCOUNT", arguments[0]];
+            args = [0x10000, "PFCOUNT", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "PFCOUNT", arguments[0], arguments[1]];
+            args = [0x10000, "PFCOUNT", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "PFCOUNT";
             for(let n = 0; n < len; n++)
             {
@@ -3576,14 +4266,14 @@ Commands.prototype.pfcount = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * PFDEBUG arg arg arg ...options...
+ * PFDEBUG arg arg ...options...
  *
- * (write)
- * (arity -3, first key 0, last key 0)
+ * (write, admin, 0, 0, 0, @write)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Help not available.
  *
@@ -3603,13 +4293,13 @@ Commands.prototype.pfdebug = function()
         }
         case 2:
         {
-            args = [0x20000, "PFDEBUG", arguments[0], arguments[1]];
+            args = [0x0, "PFDEBUG", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20000;
+            args[0] = 0x0;
             args[1] = "PFDEBUG";
             for(let n = 0; n < len; n++)
             {
@@ -3617,14 +4307,14 @@ Commands.prototype.pfdebug = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * PFMERGE destkey sourcekey [sourcekey ...]
  *
- * (write, denyoom)
- * (arity -2, first key 1, last key -1)
+ * (write, denyoom, 1, -1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Merge N different HyperLogLogs into a single one.
  *
@@ -3643,18 +4333,18 @@ Commands.prototype.pfmerge = function()
         }
         case 1:
         {
-            args = [0x20001, "PFMERGE", arguments[0]];
+            args = [0x20000, "PFMERGE", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x20001, "PFMERGE", arguments[0], arguments[1]];
+            args = [0x20000, "PFMERGE", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "PFMERGE";
             for(let n = 0; n < len; n++)
             {
@@ -3662,14 +4352,14 @@ Commands.prototype.pfmerge = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * PFSELFTEST arg
+ * PFSELFTEST
  *
- * (admin)
- * (arity 1, first key 0, last key 0)
+ * (admin, 0, 0, 0, @hyperloglog)
+ * (arity 1, first key NaN, last key NaN)
  *
  * Help not available.
  *
@@ -3681,68 +4371,65 @@ Commands.prototype.pfselftest = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "PFSELFTEST"]);
+        return this._cp([0x0, "PFSELFTEST"]);
     }
     else
     {
-        this._c([0x0, "PFSELFTEST", callback]);
+        this._cc([0x0, "PFSELFTEST", callback]);
     }
 };
-
-/*class P extends Promise
-{
-    constructor()
-    {
-        let a;
-        let b;
-        super((resolve, reject) =>
-        {
-            a = resolve;
-            b = reject;
-        });
-        this.resolver = a;
-        this.rejector = b;
-    }
-}*/
 
 /**
  * PING [message]
  *
- * (stale, fast)
- * (arity -1, first key 0, last key 0)
+ * (stale, fast, 0, 0)
+ * (arity -1, first key 0, last key NaN)
  *
  * Ping the server.
  *
  * @see http://redis.io/commands/ping
  * @since 1.0.0
  */
-Commands.prototype.ping = function(done)
+Commands.prototype.ping = function()
 {
-    if(done instanceof Function)
+    let args;
+    const len = arguments.length;
+    switch(len)
     {
-        this._c([0x0, "PING", done]);
-    }
-    else
-    {
-        return new Promise((resolve, reject) => this._c([0x0, "PING", (err, result) =>
+        case 0:
         {
-            if(err === null)
+            args = [0x0, "PING"];
+            break;
+        }
+        case 1:
+        {
+            args = [0x0, "PING", arguments[0]];
+            break;
+        }
+        case 2:
+        {
+            args = [0x0, "PING", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x0;
+            args[1] = "PING";
+            for(let n = 0; n < len; n++)
             {
-                resolve(result);
+                args[n+2] = arguments[n];
             }
-            else
-            {
-                reject(err);
-            }
-        }]));
+        }
     }
+    return this._c(args);
 };
 
 /**
- * POST arg ...options...
+ * POST ...options...
  *
- * (loading, stale)
- * (arity -1, first key 0, last key 0)
+ * (readonly, loading, stale, 0, 0)
+ * (arity -1, first key 0, last key NaN)
  *
  * Help not available.
  *
@@ -3757,23 +4444,23 @@ Commands.prototype.post = function()
     {
         case 0:
         {
-            args = [0x0, "POST"];
+            args = [0x10000, "POST"];
             break;
         }
         case 1:
         {
-            args = [0x0, "POST", arguments[0]];
+            args = [0x10000, "POST", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x0, "POST", arguments[0], arguments[1]];
+            args = [0x10000, "POST", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x0;
+            args[0] = 0x10000;
             args[1] = "POST";
             for(let n = 0; n < len; n++)
             {
@@ -3781,14 +4468,14 @@ Commands.prototype.post = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * PSETEX key milliseconds value
  *
- * (write, denyoom)
- * (arity 4, first key 1, last key 1)
+ * (write, denyoom, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Set the value and expiration in milliseconds of a key.
  *
@@ -3810,7 +4497,7 @@ Commands.prototype.psetex = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "PSETEX";
             for(let n = 0; n < len; n++)
             {
@@ -3818,14 +4505,14 @@ Commands.prototype.psetex = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * PSUBSCRIBE pattern [pattern ...]
  *
- * (pubsub, noscript, loading, stale)
- * (arity -2, first key 0, last key 0)
+ * (pubsub, noscript, loading, stale, 0, 0)
+ * (arity -2, first key 0, last key NaN)
  *
  * Listen for messages published to channels matching the given patterns.
  *
@@ -3863,40 +4550,40 @@ Commands.prototype.psubscribe = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * PSYNC arg arg arg
+ * PSYNC replicationid offset
  *
- * (readonly, admin, noscript)
- * (arity 3, first key 0, last key 0)
+ * (admin, noscript, 0, 0, 0)
+ * (arity 3, first key NaN, last key NaN)
  *
- * Help not available.
+ * Internal command used for replication.
  *
  * @param {Object} arg0 the first argument.
  * @param {Object} arg1 the second argument.
  * @param {Function} callback the function to call when done.
  * @see http://redis.io/commands/psync
- * @since not known
+ * @since 2.8.0
  */
 Commands.prototype.psync = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "PSYNC", arg0, arg1]);
+        return this._cp([0x0, "PSYNC", arg0, arg1]);
     }
     else
     {
-        this._c([0x0, "PSYNC", arg0, arg1, callback]);
+        this._cc([0x0, "PSYNC", arg0, arg1, callback]);
     }
 };
 
 /**
  * PTTL key
  *
- * (readonly, fast)
- * (arity 2, first key 1, last key 1)
+ * (readonly, random, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get the time to live for a key in milliseconds.
  *
@@ -3909,19 +4596,19 @@ Commands.prototype.pttl = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "PTTL", arg0]);
+        return this._cp([0x10000, "PTTL", arg0]);
     }
     else
     {
-        this._c([0x10001, "PTTL", arg0, callback]);
+        this._cc([0x10000, "PTTL", arg0, callback]);
     }
 };
 
 /**
  * PUBLISH channel message
  *
- * (pubsub, loading, stale, fast)
- * (arity 3, first key 0, last key 0)
+ * (pubsub, loading, stale, fast, 0, 0)
+ * (arity 3, first key 0, last key NaN)
  *
  * Post a message to a channel.
  *
@@ -3935,19 +4622,19 @@ Commands.prototype.publish = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "PUBLISH", arg0, arg1]);
+        return this._cp([0x0, "PUBLISH", arg0, arg1]);
     }
     else
     {
-        this._c([0x0, "PUBLISH", arg0, arg1, callback]);
+        this._cc([0x0, "PUBLISH", arg0, arg1, callback]);
     }
 };
 
 /**
  * PUBSUB subcommand [argument [argument ...]]
  *
- * (pubsub, random, loading, stale)
- * (arity -2, first key 0, last key 0)
+ * (pubsub, random, loading, stale, 0, 0)
+ * (arity -2, first key 0, last key NaN)
  *
  * Inspect the state of the Pub/Sub subsystem.
  *
@@ -3985,14 +4672,14 @@ Commands.prototype.pubsub = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * PUNSUBSCRIBE [pattern [pattern ...]]
  *
- * (pubsub, noscript, loading, stale)
- * (arity -1, first key 0, last key 0)
+ * (pubsub, noscript, loading, stale, 0, 0)
+ * (arity -1, first key 0, last key NaN)
  *
  * Stop listening for messages posted to channels matching the given patterns.
  *
@@ -4031,7 +4718,7 @@ Commands.prototype.punsubscribe = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
@@ -4072,14 +4759,14 @@ Commands.prototype.quit = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * RANDOMKEY -
  *
- * (readonly, random)
- * (arity 1, first key 0, last key 0)
+ * (readonly, random, 0, 0, 0)
+ * (arity 1, first key NaN, last key NaN)
  *
  * Return a random key from the keyspace.
  *
@@ -4091,21 +4778,21 @@ Commands.prototype.randomkey = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10000, "RANDOMKEY"]);
+        return this._cp([0x10000, "RANDOMKEY"]);
     }
     else
     {
-        this._c([0x10000, "RANDOMKEY", callback]);
+        this._cc([0x10000, "RANDOMKEY", callback]);
     }
 };
 
 /**
  * READONLY -
  *
- * (fast)
- * (arity 1, first key 0, last key 0)
+ * (fast, 0, 0)
+ * (arity 1, first key 0, last key NaN)
  *
- * Enables read queries for a connection to a cluster slave node.
+ * Enables read queries for a connection to a cluster replica node.
  *
  * @param {Function} callback the function to call when done.
  * @see http://redis.io/commands/readonly
@@ -4115,21 +4802,21 @@ Commands.prototype.readonly = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "READONLY"]);
+        return this._cp([0x0, "READONLY"]);
     }
     else
     {
-        this._c([0x0, "READONLY", callback]);
+        this._cc([0x0, "READONLY", callback]);
     }
 };
 
 /**
  * READWRITE -
  *
- * (fast)
- * (arity 1, first key 0, last key 0)
+ * (fast, 0, 0)
+ * (arity 1, first key 0, last key NaN)
  *
- * Disables read queries for a connection to a cluster slave node.
+ * Disables read queries for a connection to a cluster replica node.
  *
  * @param {Function} callback the function to call when done.
  * @see http://redis.io/commands/readwrite
@@ -4139,19 +4826,19 @@ Commands.prototype.readwrite = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "READWRITE"]);
+        return this._cp([0x0, "READWRITE"]);
     }
     else
     {
-        this._c([0x0, "READWRITE", callback]);
+        this._cc([0x0, "READWRITE", callback]);
     }
 };
 
 /**
  * RENAME key newkey
  *
- * (write)
- * (arity 3, first key 1, last key 2)
+ * (write, 1, 2, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Rename a key.
  *
@@ -4165,19 +4852,19 @@ Commands.prototype.rename = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "RENAME", arg0, arg1]);
+        return this._cp([0x20000, "RENAME", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "RENAME", arg0, arg1, callback]);
+        this._cc([0x20000, "RENAME", arg0, arg1, callback]);
     }
 };
 
 /**
  * RENAMENX key newkey
  *
- * (write, fast)
- * (arity 3, first key 1, last key 2)
+ * (write, fast, 1, 2, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Rename a key, only if the new key does not exist.
  *
@@ -4191,19 +4878,19 @@ Commands.prototype.renamenx = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "RENAMENX", arg0, arg1]);
+        return this._cp([0x20000, "RENAMENX", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "RENAMENX", arg0, arg1, callback]);
+        this._cc([0x20000, "RENAMENX", arg0, arg1, callback]);
     }
 };
 
 /**
- * REPLCONF arg ...options...
+ * REPLCONF ...options...
  *
- * (admin, noscript, loading, stale)
- * (arity -1, first key 0, last key 0)
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -1, first key NaN, last key NaN)
  *
  * Help not available.
  *
@@ -4242,14 +4929,40 @@ Commands.prototype.replconf = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * RESTORE key ttl serialized-value [REPLACE]
+ * REPLICAOF host port
  *
- * (write, denyoom)
- * (arity -4, first key 1, last key 1)
+ * (admin, noscript, stale, 0, 0, 0)
+ * (arity 3, first key NaN, last key NaN)
+ *
+ * Make the server a replica of another instance, or promote it as master.
+ *
+ * @param {Object} arg0 the first argument.
+ * @param {Object} arg1 the second argument.
+ * @param {Function} callback the function to call when done.
+ * @see http://redis.io/commands/replicaof
+ * @since 5.0.0
+ */
+Commands.prototype.replicaof = function(arg0, arg1, callback)
+{
+    if(callback === void(0))
+    {
+        return this._cp([0x0, "REPLICAOF", arg0, arg1]);
+    }
+    else
+    {
+        this._cc([0x0, "REPLICAOF", arg0, arg1, callback]);
+    }
+};
+
+/**
+ * RESTORE key ttl serialized-value [REPLACE] [ABSTTL] [IDLETIME seconds] [FREQ frequency]
+ *
+ * (write, denyoom, 1, 1, 1, @keyspace)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Create a key using the provided serialized value, previously obtained using DUMP.
  *
@@ -4271,7 +4984,7 @@ Commands.prototype.restore = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "RESTORE";
             for(let n = 0; n < len; n++)
             {
@@ -4279,14 +4992,14 @@ Commands.prototype.restore = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * RESTORE-ASKING key arg arg arg ...options...
+ * RESTORE-ASKING key arg arg ...options...
  *
- * (write, denyoom, asking)
- * (arity -4, first key 1, last key 1)
+ * (write, denyoom, asking, 1, 1, 1, @keyspace)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Help not available.
  *
@@ -4308,7 +5021,7 @@ Commands.prototype.restore_asking = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "RESTORE-ASKING";
             for(let n = 0; n < len; n++)
             {
@@ -4316,14 +5029,14 @@ Commands.prototype.restore_asking = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ROLE -
  *
- * (noscript, loading, stale)
- * (arity 1, first key 0, last key 0)
+ * (readonly, noscript, loading, stale, fast, 0, 0, 0)
+ * (arity 1, first key NaN, last key NaN)
  *
  * Return the role of the instance in the context of replication.
  *
@@ -4335,19 +5048,19 @@ Commands.prototype.role = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "ROLE"]);
+        return this._cp([0x10000, "ROLE"]);
     }
     else
     {
-        this._c([0x0, "ROLE", callback]);
+        this._cc([0x10000, "ROLE", callback]);
     }
 };
 
 /**
  * RPOP key
  *
- * (write, fast)
- * (arity 2, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Remove and get the last element in a list.
  *
@@ -4360,19 +5073,19 @@ Commands.prototype.rpop = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "RPOP", arg0]);
+        return this._cp([0x20000, "RPOP", arg0]);
     }
     else
     {
-        this._c([0x20001, "RPOP", arg0, callback]);
+        this._cc([0x20000, "RPOP", arg0, callback]);
     }
 };
 
 /**
  * RPOPLPUSH source destination
  *
- * (write, denyoom)
- * (arity 3, first key 1, last key 2)
+ * (write, denyoom, 1, 2, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Remove the last element in a list, prepend it to another list and return it.
  *
@@ -4386,21 +5099,21 @@ Commands.prototype.rpoplpush = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "RPOPLPUSH", arg0, arg1]);
+        return this._cp([0x20000, "RPOPLPUSH", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "RPOPLPUSH", arg0, arg1, callback]);
+        this._cc([0x20000, "RPOPLPUSH", arg0, arg1, callback]);
     }
 };
 
 /**
- * RPUSH key value [value ...]
+ * RPUSH key element [element ...]
  *
- * (write, denyoom, fast)
- * (arity -3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
- * Append one or multiple values to a list.
+ * Append one or multiple elements to a list.
  *
  * @see http://redis.io/commands/rpush
  * @since 1.0.0
@@ -4418,13 +5131,13 @@ Commands.prototype.rpush = function()
         }
         case 2:
         {
-            args = [0x20001, "RPUSH", arguments[0], arguments[1]];
+            args = [0x20000, "RPUSH", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "RPUSH";
             for(let n = 0; n < len; n++)
             {
@@ -4432,16 +5145,16 @@ Commands.prototype.rpush = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * RPUSHX key value
+ * RPUSHX key element [element ...]
  *
- * (write, denyoom, fast)
- * (arity -3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
- * Append a value to a list, only if the list exists.
+ * Append an element to a list, only if the list exists.
  *
  * @see http://redis.io/commands/rpushx
  * @since 2.2.0
@@ -4459,13 +5172,13 @@ Commands.prototype.rpushx = function()
         }
         case 2:
         {
-            args = [0x20001, "RPUSHX", arguments[0], arguments[1]];
+            args = [0x20000, "RPUSHX", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "RPUSHX";
             for(let n = 0; n < len; n++)
             {
@@ -4473,14 +5186,14 @@ Commands.prototype.rpushx = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SADD key member [member ...]
  *
- * (write, denyoom, fast)
- * (arity -3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Add one or more members to a set.
  *
@@ -4500,13 +5213,13 @@ Commands.prototype.sadd = function()
         }
         case 2:
         {
-            args = [0x20001, "SADD", arguments[0], arguments[1]];
+            args = [0x20000, "SADD", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SADD";
             for(let n = 0; n < len; n++)
             {
@@ -4514,14 +5227,14 @@ Commands.prototype.sadd = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SAVE -
  *
- * (admin, noscript)
- * (arity 1, first key 0, last key 0)
+ * (admin, noscript, 0, 0, 0)
+ * (arity 1, first key NaN, last key NaN)
  *
  * Synchronously save the dataset to disk.
  *
@@ -4533,19 +5246,19 @@ Commands.prototype.save = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "SAVE"]);
+        return this._cp([0x0, "SAVE"]);
     }
     else
     {
-        this._c([0x0, "SAVE", callback]);
+        this._cc([0x0, "SAVE", callback]);
     }
 };
 
 /**
- * SCAN cursor [MATCH pattern] [COUNT count]
+ * SCAN cursor [MATCH pattern] [COUNT count] [TYPE type]
  *
- * (readonly, random)
- * (arity -2, first key 0, last key 0)
+ * (readonly, random, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Incrementally iterate the keys space.
  *
@@ -4583,14 +5296,14 @@ Commands.prototype.scan = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SCARD key
  *
- * (readonly, fast)
- * (arity 2, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get the number of members in a set.
  *
@@ -4603,19 +5316,19 @@ Commands.prototype.scard = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "SCARD", arg0]);
+        return this._cp([0x10000, "SCARD", arg0]);
     }
     else
     {
-        this._c([0x10001, "SCARD", arg0, callback]);
+        this._cc([0x10000, "SCARD", arg0, callback]);
     }
 };
 
 /**
  * SCRIPT DEBUG YES|SYNC|NO
  *
- * (noscript)
- * (arity -2, first key 0, last key 0)
+ * (noscript, 0, 0)
+ * (arity -2, first key 0, last key NaN)
  *
  * Set the debug mode for executed scripts.
  *
@@ -4624,10 +5337,10 @@ Commands.prototype.scard = function(arg0, callback)
  *
  * ----
  *
- * SCRIPT EXISTS script [script ...]
+ * SCRIPT EXISTS sha1 [sha1 ...]
  *
- * (noscript)
- * (arity -2, first key 0, last key 0)
+ * (noscript, 0, 0)
+ * (arity -2, first key 0, last key NaN)
  *
  * Check existence of scripts in the script cache.
  *
@@ -4638,8 +5351,8 @@ Commands.prototype.scard = function(arg0, callback)
  *
  * SCRIPT FLUSH -
  *
- * (noscript)
- * (arity -2, first key 0, last key 0)
+ * (noscript, 0, 0)
+ * (arity -2, first key 0, last key NaN)
  *
  * Remove all the scripts from the script cache.
  *
@@ -4650,8 +5363,8 @@ Commands.prototype.scard = function(arg0, callback)
  *
  * SCRIPT KILL -
  *
- * (noscript)
- * (arity -2, first key 0, last key 0)
+ * (noscript, 0, 0)
+ * (arity -2, first key 0, last key NaN)
  *
  * Kill the script currently in execution.
  *
@@ -4662,8 +5375,8 @@ Commands.prototype.scard = function(arg0, callback)
  *
  * SCRIPT LOAD script
  *
- * (noscript)
- * (arity -2, first key 0, last key 0)
+ * (noscript, 0, 0)
+ * (arity -2, first key 0, last key NaN)
  *
  * Load the specified Lua script into the script cache.
  *
@@ -4701,14 +5414,14 @@ Commands.prototype.script = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SDIFF key [key ...]
  *
- * (readonly, sort_for_script)
- * (arity -2, first key 1, last key -1)
+ * (readonly, sort_for_script, 1, -1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Subtract multiple sets.
  *
@@ -4727,18 +5440,18 @@ Commands.prototype.sdiff = function()
         }
         case 1:
         {
-            args = [0x10001, "SDIFF", arguments[0]];
+            args = [0x10000, "SDIFF", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "SDIFF", arguments[0], arguments[1]];
+            args = [0x10000, "SDIFF", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "SDIFF";
             for(let n = 0; n < len; n++)
             {
@@ -4746,14 +5459,14 @@ Commands.prototype.sdiff = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SDIFFSTORE destination key [key ...]
  *
- * (write, denyoom)
- * (arity -3, first key 1, last key -1)
+ * (write, denyoom, 1, -1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Subtract multiple sets and store the resulting set in a key.
  *
@@ -4773,13 +5486,13 @@ Commands.prototype.sdiffstore = function()
         }
         case 2:
         {
-            args = [0x20001, "SDIFFSTORE", arguments[0], arguments[1]];
+            args = [0x20000, "SDIFFSTORE", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SDIFFSTORE";
             for(let n = 0; n < len; n++)
             {
@@ -4787,14 +5500,14 @@ Commands.prototype.sdiffstore = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SELECT index
  *
- * (loading, fast)
- * (arity 2, first key 0, last key 0)
+ * (loading, stale, fast, 0, 0)
+ * (arity 2, first key 0, last key NaN)
  *
  * Change the selected database for the current connection.
  *
@@ -4807,19 +5520,19 @@ Commands.prototype.select = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "SELECT", arg0]);
+        return this._cp([0x0, "SELECT", arg0]);
     }
     else
     {
-        this._c([0x0, "SELECT", arg0, callback]);
+        this._cc([0x0, "SELECT", arg0, callback]);
     }
 };
 
 /**
- * SET key value [EX seconds] [PX milliseconds] [NX|XX]
+ * SET key value [EX seconds|PX milliseconds] [NX|XX] [KEEPTTL]
  *
- * (write, denyoom)
- * (arity -3, first key 1, last key 1)
+ * (write, denyoom, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Set the string value of a key.
  *
@@ -4839,13 +5552,13 @@ Commands.prototype.set = function()
         }
         case 2:
         {
-            args = [0x20001, "SET", arguments[0], arguments[1]];
+            args = [0x20000, "SET", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SET";
             for(let n = 0; n < len; n++)
             {
@@ -4853,14 +5566,14 @@ Commands.prototype.set = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SETBIT key offset value
  *
- * (write, denyoom)
- * (arity 4, first key 1, last key 1)
+ * (write, denyoom, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Sets or clears the bit at offset in the string value stored at key.
  *
@@ -4882,7 +5595,7 @@ Commands.prototype.setbit = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SETBIT";
             for(let n = 0; n < len; n++)
             {
@@ -4890,14 +5603,14 @@ Commands.prototype.setbit = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SETEX key seconds value
  *
- * (write, denyoom)
- * (arity 4, first key 1, last key 1)
+ * (write, denyoom, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Set the value and expiration of a key.
  *
@@ -4919,7 +5632,7 @@ Commands.prototype.setex = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SETEX";
             for(let n = 0; n < len; n++)
             {
@@ -4927,14 +5640,14 @@ Commands.prototype.setex = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SETNX key value
  *
- * (write, denyoom, fast)
- * (arity 3, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Set the value of a key, only if the key does not exist.
  *
@@ -4948,19 +5661,19 @@ Commands.prototype.setnx = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20001, "SETNX", arg0, arg1]);
+        return this._cp([0x20000, "SETNX", arg0, arg1]);
     }
     else
     {
-        this._c([0x20001, "SETNX", arg0, arg1, callback]);
+        this._cc([0x20000, "SETNX", arg0, arg1, callback]);
     }
 };
 
 /**
  * SETRANGE key offset value
  *
- * (write, denyoom)
- * (arity 4, first key 1, last key 1)
+ * (write, denyoom, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Overwrite part of a string at key starting at the specified offset.
  *
@@ -4982,7 +5695,7 @@ Commands.prototype.setrange = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SETRANGE";
             for(let n = 0; n < len; n++)
             {
@@ -4990,14 +5703,14 @@ Commands.prototype.setrange = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SHUTDOWN [NOSAVE|SAVE]
  *
- * (admin, loading, stale)
- * (arity -1, first key 0, last key 0)
+ * (admin, noscript, loading, stale, 0, 0, 0)
+ * (arity -1, first key NaN, last key NaN)
  *
  * Synchronously save the dataset to disk and then shut down the server.
  *
@@ -5036,14 +5749,14 @@ Commands.prototype.shutdown = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SINTER key [key ...]
  *
- * (readonly, sort_for_script)
- * (arity -2, first key 1, last key -1)
+ * (readonly, sort_for_script, 1, -1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Intersect multiple sets.
  *
@@ -5062,18 +5775,18 @@ Commands.prototype.sinter = function()
         }
         case 1:
         {
-            args = [0x10001, "SINTER", arguments[0]];
+            args = [0x10000, "SINTER", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "SINTER", arguments[0], arguments[1]];
+            args = [0x10000, "SINTER", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "SINTER";
             for(let n = 0; n < len; n++)
             {
@@ -5081,14 +5794,14 @@ Commands.prototype.sinter = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SINTERSTORE destination key [key ...]
  *
- * (write, denyoom)
- * (arity -3, first key 1, last key -1)
+ * (write, denyoom, 1, -1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Intersect multiple sets and store the resulting set in a key.
  *
@@ -5108,13 +5821,13 @@ Commands.prototype.sinterstore = function()
         }
         case 2:
         {
-            args = [0x20001, "SINTERSTORE", arguments[0], arguments[1]];
+            args = [0x20000, "SINTERSTORE", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SINTERSTORE";
             for(let n = 0; n < len; n++)
             {
@@ -5122,14 +5835,14 @@ Commands.prototype.sinterstore = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SISMEMBER key member
  *
- * (readonly, fast)
- * (arity 3, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Determine if a given value is a member of a set.
  *
@@ -5143,21 +5856,21 @@ Commands.prototype.sismember = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "SISMEMBER", arg0, arg1]);
+        return this._cp([0x10000, "SISMEMBER", arg0, arg1]);
     }
     else
     {
-        this._c([0x10001, "SISMEMBER", arg0, arg1, callback]);
+        this._cc([0x10000, "SISMEMBER", arg0, arg1, callback]);
     }
 };
 
 /**
  * SLAVEOF host port
  *
- * (admin, noscript, stale)
- * (arity 3, first key 0, last key 0)
+ * (admin, noscript, stale, 0, 0, 0)
+ * (arity 3, first key NaN, last key NaN)
  *
- * Make the server a slave of another instance, or promote it as master.
+ * Make the server a replica of another instance, or promote it as master. Deprecated starting with Redis 5. Use REPLICAOF instead.
  *
  * @param {Object} arg0 the first argument.
  * @param {Object} arg1 the second argument.
@@ -5169,19 +5882,19 @@ Commands.prototype.slaveof = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "SLAVEOF", arg0, arg1]);
+        return this._cp([0x0, "SLAVEOF", arg0, arg1]);
     }
     else
     {
-        this._c([0x0, "SLAVEOF", arg0, arg1, callback]);
+        this._cc([0x0, "SLAVEOF", arg0, arg1, callback]);
     }
 };
 
 /**
  * SLOWLOG subcommand [argument]
  *
- * (admin)
- * (arity -2, first key 0, last key 0)
+ * (admin, random, loading, stale, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Manages the Redis slow queries log.
  *
@@ -5219,14 +5932,14 @@ Commands.prototype.slowlog = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SMEMBERS key
  *
- * (readonly, sort_for_script)
- * (arity 2, first key 1, last key 1)
+ * (readonly, sort_for_script, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get all the members in a set.
  *
@@ -5239,19 +5952,19 @@ Commands.prototype.smembers = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "SMEMBERS", arg0]);
+        return this._cp([0x10000, "SMEMBERS", arg0]);
     }
     else
     {
-        this._c([0x10001, "SMEMBERS", arg0, callback]);
+        this._cc([0x10000, "SMEMBERS", arg0, callback]);
     }
 };
 
 /**
  * SMOVE source destination member
  *
- * (write, fast)
- * (arity 4, first key 1, last key 2)
+ * (write, fast, 1, 2, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Move a member from one set to another.
  *
@@ -5273,7 +5986,7 @@ Commands.prototype.smove = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SMOVE";
             for(let n = 0; n < len; n++)
             {
@@ -5281,14 +5994,14 @@ Commands.prototype.smove = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SORT key [BY pattern] [LIMIT offset count] [GET pattern [GET pattern ...]] [ASC|DESC] [ALPHA] [STORE destination]
  *
- * (write, denyoom, movablekeys)
- * (arity -2, first key 1, last key 1)
+ * (write, denyoom, movablekeys, 1, 1, 1, @write, @set, @sortedset)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Sort the elements in a list, set or sorted set.
  *
@@ -5307,18 +6020,18 @@ Commands.prototype.sort = function()
         }
         case 1:
         {
-            args = [0x20001, "SORT", arguments[0]];
+            args = [0x20000, "SORT", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x20001, "SORT", arguments[0], arguments[1]];
+            args = [0x20000, "SORT", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SORT";
             for(let n = 0; n < len; n++)
             {
@@ -5326,14 +6039,14 @@ Commands.prototype.sort = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SPOP key [count]
  *
- * (write, random, fast)
- * (arity -2, first key 1, last key 1)
+ * (write, random, fast, 1, 1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Remove and return one or multiple random members from a set.
  *
@@ -5352,18 +6065,18 @@ Commands.prototype.spop = function()
         }
         case 1:
         {
-            args = [0x20001, "SPOP", arguments[0]];
+            args = [0x20000, "SPOP", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x20001, "SPOP", arguments[0], arguments[1]];
+            args = [0x20000, "SPOP", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SPOP";
             for(let n = 0; n < len; n++)
             {
@@ -5371,14 +6084,14 @@ Commands.prototype.spop = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SRANDMEMBER key [count]
  *
- * (readonly, random)
- * (arity -2, first key 1, last key 1)
+ * (readonly, random, 1, 1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Get one or multiple random members from a set.
  *
@@ -5397,18 +6110,18 @@ Commands.prototype.srandmember = function()
         }
         case 1:
         {
-            args = [0x10001, "SRANDMEMBER", arguments[0]];
+            args = [0x10000, "SRANDMEMBER", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "SRANDMEMBER", arguments[0], arguments[1]];
+            args = [0x10000, "SRANDMEMBER", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "SRANDMEMBER";
             for(let n = 0; n < len; n++)
             {
@@ -5416,14 +6129,14 @@ Commands.prototype.srandmember = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SREM key member [member ...]
  *
- * (write, fast)
- * (arity -3, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Remove one or more members from a set.
  *
@@ -5443,13 +6156,13 @@ Commands.prototype.srem = function()
         }
         case 2:
         {
-            args = [0x20001, "SREM", arguments[0], arguments[1]];
+            args = [0x20000, "SREM", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SREM";
             for(let n = 0; n < len; n++)
             {
@@ -5457,14 +6170,14 @@ Commands.prototype.srem = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SSCAN key cursor [MATCH pattern] [COUNT count]
  *
- * (readonly, random)
- * (arity -3, first key 1, last key 1)
+ * (readonly, random, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Incrementally iterate Set elements.
  *
@@ -5484,13 +6197,13 @@ Commands.prototype.sscan = function()
         }
         case 2:
         {
-            args = [0x10001, "SSCAN", arguments[0], arguments[1]];
+            args = [0x10000, "SSCAN", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "SSCAN";
             for(let n = 0; n < len; n++)
             {
@@ -5498,14 +6211,59 @@ Commands.prototype.sscan = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
+};
+
+/**
+ * STRALGO LCS algo-specific-argument [algo-specific-argument ...]
+ *
+ * (readonly, movablekeys, 0, 0, 0)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Run algorithms (currently LCS) against strings.
+ *
+ * @see http://redis.io/commands/stralgo
+ * @since 6.0.0
+ */
+Commands.prototype.stralgo = function()
+{
+    let args;
+    const len = arguments.length;
+    switch(len)
+    {
+        case 0:
+        {
+            throw new Error("STRALGO: wrong number of arguments");
+        }
+        case 1:
+        {
+            args = [0x10000, "STRALGO", arguments[0]];
+            break;
+        }
+        case 2:
+        {
+            args = [0x10000, "STRALGO", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x10000;
+            args[1] = "STRALGO";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
+    }
+    return this._c(args);
 };
 
 /**
  * STRLEN key
  *
- * (readonly, fast)
- * (arity 2, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get the length of the value stored in a key.
  *
@@ -5518,19 +6276,19 @@ Commands.prototype.strlen = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "STRLEN", arg0]);
+        return this._cp([0x10000, "STRLEN", arg0]);
     }
     else
     {
-        this._c([0x10001, "STRLEN", arg0, callback]);
+        this._cc([0x10000, "STRLEN", arg0, callback]);
     }
 };
 
 /**
  * SUBSCRIBE channel [channel ...]
  *
- * (pubsub, noscript, loading, stale)
- * (arity -2, first key 0, last key 0)
+ * (pubsub, noscript, loading, stale, 0, 0)
+ * (arity -2, first key 0, last key NaN)
  *
  * Listen for messages published to the given channels.
  *
@@ -5568,14 +6326,14 @@ Commands.prototype.subscribe = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * SUBSTR key arg arg arg
+ * SUBSTR key arg arg
  *
- * (readonly)
- * (arity 4, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Help not available.
  *
@@ -5597,7 +6355,7 @@ Commands.prototype.substr = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "SUBSTR";
             for(let n = 0; n < len; n++)
             {
@@ -5605,14 +6363,14 @@ Commands.prototype.substr = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SUNION key [key ...]
  *
- * (readonly, sort_for_script)
- * (arity -2, first key 1, last key -1)
+ * (readonly, sort_for_script, 1, -1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
  * Add multiple sets.
  *
@@ -5631,18 +6389,18 @@ Commands.prototype.sunion = function()
         }
         case 1:
         {
-            args = [0x10001, "SUNION", arguments[0]];
+            args = [0x10000, "SUNION", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "SUNION", arguments[0], arguments[1]];
+            args = [0x10000, "SUNION", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "SUNION";
             for(let n = 0; n < len; n++)
             {
@@ -5650,14 +6408,14 @@ Commands.prototype.sunion = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * SUNIONSTORE destination key [key ...]
  *
- * (write, denyoom)
- * (arity -3, first key 1, last key -1)
+ * (write, denyoom, 1, -1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Add multiple sets and store the resulting set in a key.
  *
@@ -5677,13 +6435,13 @@ Commands.prototype.sunionstore = function()
         }
         case 2:
         {
-            args = [0x20001, "SUNIONSTORE", arguments[0], arguments[1]];
+            args = [0x20000, "SUNIONSTORE", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "SUNIONSTORE";
             for(let n = 0; n < len; n++)
             {
@@ -5691,40 +6449,40 @@ Commands.prototype.sunionstore = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
- * SWAPDB arg arg arg
+ * SWAPDB index1 index2
  *
- * (write, fast)
- * (arity 3, first key 0, last key 0)
+ * (write, fast, 0, 0, 0, @keyspace)
+ * (arity 3, first key NaN, last key NaN)
  *
- * Help not available.
+ * Swaps two Redis databases.
  *
  * @param {Object} arg0 the first argument.
  * @param {Object} arg1 the second argument.
  * @param {Function} callback the function to call when done.
  * @see http://redis.io/commands/swapdb
- * @since not known
+ * @since 4.0.0
  */
 Commands.prototype.swapdb = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x20000, "SWAPDB", arg0, arg1]);
+        return this._cp([0x20000, "SWAPDB", arg0, arg1]);
     }
     else
     {
-        this._c([0x20000, "SWAPDB", arg0, arg1, callback]);
+        this._cc([0x20000, "SWAPDB", arg0, arg1, callback]);
     }
 };
 
 /**
  * SYNC -
  *
- * (readonly, admin, noscript)
- * (arity 1, first key 0, last key 0)
+ * (admin, noscript, 0, 0, 0)
+ * (arity 1, first key NaN, last key NaN)
  *
  * Internal command used for replication.
  *
@@ -5736,19 +6494,19 @@ Commands.prototype.sync = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "SYNC"]);
+        return this._cp([0x0, "SYNC"]);
     }
     else
     {
-        this._c([0x0, "SYNC", callback]);
+        this._cc([0x0, "SYNC", callback]);
     }
 };
 
 /**
  * TIME -
  *
- * (random, fast)
- * (arity 1, first key 0, last key 0)
+ * (readonly, random, loading, stale, fast, 0, 0)
+ * (arity 1, first key 0, last key NaN)
  *
  * Return the current server time.
  *
@@ -5760,24 +6518,24 @@ Commands.prototype.time = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "TIME"]);
+        return this._cp([0x10000, "TIME"]);
     }
     else
     {
-        this._c([0x0, "TIME", callback]);
+        this._cc([0x10000, "TIME", callback]);
     }
 };
 
 /**
- * TOUCH key arg ...options...
+ * TOUCH key [key ...]
  *
- * (readonly, fast)
- * (arity -2, first key 1, last key 1)
+ * (readonly, fast, 1, -1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
- * Help not available.
+ * Alters the last access time of a key(s). Returns the number of existing keys specified.
  *
  * @see http://redis.io/commands/touch
- * @since not known
+ * @since 3.2.1
  */
 Commands.prototype.touch = function()
 {
@@ -5791,18 +6549,18 @@ Commands.prototype.touch = function()
         }
         case 1:
         {
-            args = [0x10001, "TOUCH", arguments[0]];
+            args = [0x10000, "TOUCH", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x10001, "TOUCH", arguments[0], arguments[1]];
+            args = [0x10000, "TOUCH", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "TOUCH";
             for(let n = 0; n < len; n++)
             {
@@ -5810,14 +6568,14 @@ Commands.prototype.touch = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * TTL key
  *
- * (readonly, fast)
- * (arity 2, first key 1, last key 1)
+ * (readonly, random, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get the time to live for a key.
  *
@@ -5830,19 +6588,19 @@ Commands.prototype.ttl = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "TTL", arg0]);
+        return this._cp([0x10000, "TTL", arg0]);
     }
     else
     {
-        this._c([0x10001, "TTL", arg0, callback]);
+        this._cc([0x10000, "TTL", arg0, callback]);
     }
 };
 
 /**
  * TYPE key
  *
- * (readonly, fast)
- * (arity 2, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Determine the type stored at key.
  *
@@ -5855,24 +6613,24 @@ Commands.prototype.type = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "TYPE", arg0]);
+        return this._cp([0x10000, "TYPE", arg0]);
     }
     else
     {
-        this._c([0x10001, "TYPE", arg0, callback]);
+        this._cc([0x10000, "TYPE", arg0, callback]);
     }
 };
 
 /**
- * UNLINK key arg ...options...
+ * UNLINK key [key ...]
  *
- * (write, fast)
- * (arity -2, first key 1, last key -1)
+ * (write, fast, 1, -1, 1)
+ * (arity -2, first key NaN, last key NaN)
  *
- * Help not available.
+ * Delete a key asynchronously in another thread. Otherwise it is just as DEL, but non blocking.
  *
  * @see http://redis.io/commands/unlink
- * @since not known
+ * @since 4.0.0
  */
 Commands.prototype.unlink = function()
 {
@@ -5886,18 +6644,18 @@ Commands.prototype.unlink = function()
         }
         case 1:
         {
-            args = [0x20001, "UNLINK", arguments[0]];
+            args = [0x20000, "UNLINK", arguments[0]];
             break;
         }
         case 2:
         {
-            args = [0x20001, "UNLINK", arguments[0], arguments[1]];
+            args = [0x20000, "UNLINK", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "UNLINK";
             for(let n = 0; n < len; n++)
             {
@@ -5905,14 +6663,14 @@ Commands.prototype.unlink = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * UNSUBSCRIBE [channel [channel ...]]
  *
- * (pubsub, noscript, loading, stale)
- * (arity -1, first key 0, last key 0)
+ * (pubsub, noscript, loading, stale, 0, 0)
+ * (arity -1, first key 0, last key NaN)
  *
  * Stop listening for messages posted to the given channels.
  *
@@ -5951,14 +6709,14 @@ Commands.prototype.unsubscribe = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * UNWATCH -
  *
- * (noscript, fast)
- * (arity 1, first key 0, last key 0)
+ * (noscript, fast, 0, 0)
+ * (arity 1, first key 0, last key NaN)
  *
  * Forget about all watched keys.
  *
@@ -5970,19 +6728,19 @@ Commands.prototype.unwatch = function(callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "UNWATCH"]);
+        return this._cp([0x0, "UNWATCH"]);
     }
     else
     {
-        this._c([0x0, "UNWATCH", callback]);
+        this._cc([0x0, "UNWATCH", callback]);
     }
 };
 
 /**
- * WAIT numslaves timeout
+ * WAIT numreplicas timeout
  *
- * (noscript)
- * (arity 3, first key 0, last key 0)
+ * (noscript, 0, 0)
+ * (arity 3, first key 0, last key NaN)
  *
  * Wait for the synchronous replication of all the write commands sent in the context of the current connection.
  *
@@ -5996,19 +6754,19 @@ Commands.prototype.wait = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x0, "WAIT", arg0, arg1]);
+        return this._cp([0x0, "WAIT", arg0, arg1]);
     }
     else
     {
-        this._c([0x0, "WAIT", arg0, arg1, callback]);
+        this._cc([0x0, "WAIT", arg0, arg1, callback]);
     }
 };
 
 /**
  * WATCH key [key ...]
  *
- * (noscript, fast)
- * (arity -2, first key 1, last key -1)
+ * (noscript, fast, 1, -1)
+ * (arity -2, first key 1, last key NaN)
  *
  * Watch the given keys to determine execution of the MULTI/EXEC block.
  *
@@ -6046,14 +6804,40 @@ Commands.prototype.watch = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
+};
+
+/**
+ * XSETID key arg
+ *
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
+ *
+ * Help not available.
+ *
+ * @param {Object} arg0 the first argument.
+ * @param {Object} arg1 the second argument.
+ * @param {Function} callback the function to call when done.
+ * @see http://redis.io/commands/xsetid
+ * @since not known
+ */
+Commands.prototype.xsetid = function(arg0, arg1, callback)
+{
+    if(callback === void(0))
+    {
+        return this._cp([0x20000, "XSETID", arg0, arg1]);
+    }
+    else
+    {
+        this._cc([0x20000, "XSETID", arg0, arg1, callback]);
+    }
 };
 
 /**
  * ZADD key [NX|XX] [CH] [INCR] score member [score member ...]
  *
- * (write, denyoom, fast)
- * (arity -4, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Add one or more members to a sorted set, or update its score if it already exists.
  *
@@ -6075,7 +6859,7 @@ Commands.prototype.zadd = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "ZADD";
             for(let n = 0; n < len; n++)
             {
@@ -6083,14 +6867,14 @@ Commands.prototype.zadd = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZCARD key
  *
- * (readonly, fast)
- * (arity 2, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 2, first key NaN, last key NaN)
  *
  * Get the number of members in a sorted set.
  *
@@ -6103,19 +6887,19 @@ Commands.prototype.zcard = function(arg0, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "ZCARD", arg0]);
+        return this._cp([0x10000, "ZCARD", arg0]);
     }
     else
     {
-        this._c([0x10001, "ZCARD", arg0, callback]);
+        this._cc([0x10000, "ZCARD", arg0, callback]);
     }
 };
 
 /**
  * ZCOUNT key min max
  *
- * (readonly, fast)
- * (arity 4, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Count the members in a sorted set with scores within the given values.
  *
@@ -6137,7 +6921,7 @@ Commands.prototype.zcount = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "ZCOUNT";
             for(let n = 0; n < len; n++)
             {
@@ -6145,14 +6929,14 @@ Commands.prototype.zcount = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZINCRBY key increment member
  *
- * (write, denyoom, fast)
- * (arity 4, first key 1, last key 1)
+ * (write, denyoom, fast, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Increment the score of a member in a sorted set.
  *
@@ -6174,7 +6958,7 @@ Commands.prototype.zincrby = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "ZINCRBY";
             for(let n = 0; n < len; n++)
             {
@@ -6182,14 +6966,14 @@ Commands.prototype.zincrby = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZINTERSTORE destination numkeys key [key ...] [WEIGHTS weight] [AGGREGATE SUM|MIN|MAX]
  *
- * (write, denyoom, movablekeys)
- * (arity -4, first key 0, last key 0)
+ * (write, denyoom, movablekeys, 0, 0, 0)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Intersect multiple sorted sets and store the resulting sorted set in a new key.
  *
@@ -6219,14 +7003,14 @@ Commands.prototype.zinterstore = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZLEXCOUNT key min max
  *
- * (readonly, fast)
- * (arity 4, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Count the number of members in a sorted set between a given lexicographical range.
  *
@@ -6248,7 +7032,7 @@ Commands.prototype.zlexcount = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "ZLEXCOUNT";
             for(let n = 0; n < len; n++)
             {
@@ -6256,14 +7040,104 @@ Commands.prototype.zlexcount = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
+};
+
+/**
+ * ZPOPMAX key [count]
+ *
+ * (write, fast, 1, 1, 1)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Remove and return members with the highest scores in a sorted set.
+ *
+ * @see http://redis.io/commands/zpopmax
+ * @since 5.0.0
+ */
+Commands.prototype.zpopmax = function()
+{
+    let args;
+    const len = arguments.length;
+    switch(len)
+    {
+        case 0:
+        {
+            throw new Error("ZPOPMAX: wrong number of arguments");
+        }
+        case 1:
+        {
+            args = [0x20000, "ZPOPMAX", arguments[0]];
+            break;
+        }
+        case 2:
+        {
+            args = [0x20000, "ZPOPMAX", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x20000;
+            args[1] = "ZPOPMAX";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
+    }
+    return this._c(args);
+};
+
+/**
+ * ZPOPMIN key [count]
+ *
+ * (write, fast, 1, 1, 1)
+ * (arity -2, first key NaN, last key NaN)
+ *
+ * Remove and return members with the lowest scores in a sorted set.
+ *
+ * @see http://redis.io/commands/zpopmin
+ * @since 5.0.0
+ */
+Commands.prototype.zpopmin = function()
+{
+    let args;
+    const len = arguments.length;
+    switch(len)
+    {
+        case 0:
+        {
+            throw new Error("ZPOPMIN: wrong number of arguments");
+        }
+        case 1:
+        {
+            args = [0x20000, "ZPOPMIN", arguments[0]];
+            break;
+        }
+        case 2:
+        {
+            args = [0x20000, "ZPOPMIN", arguments[0], arguments[1]];
+            break;
+        }
+        default:
+        {
+            args = new Array(len + 2);
+            args[0] = 0x20000;
+            args[1] = "ZPOPMIN";
+            for(let n = 0; n < len; n++)
+            {
+                args[n+2] = arguments[n];
+            }
+        }
+    }
+    return this._c(args);
 };
 
 /**
  * ZRANGE key start stop [WITHSCORES]
  *
- * (readonly)
- * (arity -4, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Return a range of members in a sorted set, by index.
  *
@@ -6285,7 +7159,7 @@ Commands.prototype.zrange = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "ZRANGE";
             for(let n = 0; n < len; n++)
             {
@@ -6293,14 +7167,14 @@ Commands.prototype.zrange = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZRANGEBYLEX key min max [LIMIT offset count]
  *
- * (readonly)
- * (arity -4, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Return a range of members in a sorted set, by lexicographical range.
  *
@@ -6322,7 +7196,7 @@ Commands.prototype.zrangebylex = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "ZRANGEBYLEX";
             for(let n = 0; n < len; n++)
             {
@@ -6330,14 +7204,14 @@ Commands.prototype.zrangebylex = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]
  *
- * (readonly)
- * (arity -4, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Return a range of members in a sorted set, by score.
  *
@@ -6359,7 +7233,7 @@ Commands.prototype.zrangebyscore = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "ZRANGEBYSCORE";
             for(let n = 0; n < len; n++)
             {
@@ -6367,14 +7241,14 @@ Commands.prototype.zrangebyscore = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZRANK key member
  *
- * (readonly, fast)
- * (arity 3, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Determine the index of a member in a sorted set.
  *
@@ -6388,19 +7262,19 @@ Commands.prototype.zrank = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "ZRANK", arg0, arg1]);
+        return this._cp([0x10000, "ZRANK", arg0, arg1]);
     }
     else
     {
-        this._c([0x10001, "ZRANK", arg0, arg1, callback]);
+        this._cc([0x10000, "ZRANK", arg0, arg1, callback]);
     }
 };
 
 /**
  * ZREM key member [member ...]
  *
- * (write, fast)
- * (arity -3, first key 1, last key 1)
+ * (write, fast, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Remove one or more members from a sorted set.
  *
@@ -6420,13 +7294,13 @@ Commands.prototype.zrem = function()
         }
         case 2:
         {
-            args = [0x20001, "ZREM", arguments[0], arguments[1]];
+            args = [0x20000, "ZREM", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "ZREM";
             for(let n = 0; n < len; n++)
             {
@@ -6434,14 +7308,14 @@ Commands.prototype.zrem = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZREMRANGEBYLEX key min max
  *
- * (write)
- * (arity 4, first key 1, last key 1)
+ * (write, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Remove all members in a sorted set between the given lexicographical range.
  *
@@ -6463,7 +7337,7 @@ Commands.prototype.zremrangebylex = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "ZREMRANGEBYLEX";
             for(let n = 0; n < len; n++)
             {
@@ -6471,14 +7345,14 @@ Commands.prototype.zremrangebylex = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZREMRANGEBYRANK key start stop
  *
- * (write)
- * (arity 4, first key 1, last key 1)
+ * (write, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Remove all members in a sorted set within the given indexes.
  *
@@ -6500,7 +7374,7 @@ Commands.prototype.zremrangebyrank = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "ZREMRANGEBYRANK";
             for(let n = 0; n < len; n++)
             {
@@ -6508,14 +7382,14 @@ Commands.prototype.zremrangebyrank = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZREMRANGEBYSCORE key min max
  *
- * (write)
- * (arity 4, first key 1, last key 1)
+ * (write, 1, 1, 1)
+ * (arity 4, first key NaN, last key NaN)
  *
  * Remove all members in a sorted set within the given scores.
  *
@@ -6537,7 +7411,7 @@ Commands.prototype.zremrangebyscore = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x20001;
+            args[0] = 0x20000;
             args[1] = "ZREMRANGEBYSCORE";
             for(let n = 0; n < len; n++)
             {
@@ -6545,14 +7419,14 @@ Commands.prototype.zremrangebyscore = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZREVRANGE key start stop [WITHSCORES]
  *
- * (readonly)
- * (arity -4, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Return a range of members in a sorted set, by index, with scores ordered from high to low.
  *
@@ -6574,7 +7448,7 @@ Commands.prototype.zrevrange = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "ZREVRANGE";
             for(let n = 0; n < len; n++)
             {
@@ -6582,14 +7456,14 @@ Commands.prototype.zrevrange = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZREVRANGEBYLEX key max min [LIMIT offset count]
  *
- * (readonly)
- * (arity -4, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Return a range of members in a sorted set, by lexicographical range, ordered from higher to lower strings.
  *
@@ -6611,7 +7485,7 @@ Commands.prototype.zrevrangebylex = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "ZREVRANGEBYLEX";
             for(let n = 0; n < len; n++)
             {
@@ -6619,14 +7493,14 @@ Commands.prototype.zrevrangebylex = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]
  *
- * (readonly)
- * (arity -4, first key 1, last key 1)
+ * (readonly, 1, 1, 1)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Return a range of members in a sorted set, by score, with scores ordered from high to low.
  *
@@ -6648,7 +7522,7 @@ Commands.prototype.zrevrangebyscore = function()
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "ZREVRANGEBYSCORE";
             for(let n = 0; n < len; n++)
             {
@@ -6656,14 +7530,14 @@ Commands.prototype.zrevrangebyscore = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZREVRANK key member
  *
- * (readonly, fast)
- * (arity 3, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Determine the index of a member in a sorted set, with scores ordered from high to low.
  *
@@ -6677,19 +7551,19 @@ Commands.prototype.zrevrank = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "ZREVRANK", arg0, arg1]);
+        return this._cp([0x10000, "ZREVRANK", arg0, arg1]);
     }
     else
     {
-        this._c([0x10001, "ZREVRANK", arg0, arg1, callback]);
+        this._cc([0x10000, "ZREVRANK", arg0, arg1, callback]);
     }
 };
 
 /**
  * ZSCAN key cursor [MATCH pattern] [COUNT count]
  *
- * (readonly, random)
- * (arity -3, first key 1, last key 1)
+ * (readonly, random, 1, 1, 1)
+ * (arity -3, first key NaN, last key NaN)
  *
  * Incrementally iterate sorted sets elements and associated scores.
  *
@@ -6709,13 +7583,13 @@ Commands.prototype.zscan = function()
         }
         case 2:
         {
-            args = [0x10001, "ZSCAN", arguments[0], arguments[1]];
+            args = [0x10000, "ZSCAN", arguments[0], arguments[1]];
             break;
         }
         default:
         {
             args = new Array(len + 2);
-            args[0] = 0x10001;
+            args[0] = 0x10000;
             args[1] = "ZSCAN";
             for(let n = 0; n < len; n++)
             {
@@ -6723,14 +7597,14 @@ Commands.prototype.zscan = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };
 
 /**
  * ZSCORE key member
  *
- * (readonly, fast)
- * (arity 3, first key 1, last key 1)
+ * (readonly, fast, 1, 1, 1)
+ * (arity 3, first key NaN, last key NaN)
  *
  * Get the score associated with the given member in a sorted set.
  *
@@ -6744,19 +7618,19 @@ Commands.prototype.zscore = function(arg0, arg1, callback)
 {
     if(callback === void(0))
     {
-        this._c([0x10001, "ZSCORE", arg0, arg1]);
+        return this._cp([0x10000, "ZSCORE", arg0, arg1]);
     }
     else
     {
-        this._c([0x10001, "ZSCORE", arg0, arg1, callback]);
+        this._cc([0x10000, "ZSCORE", arg0, arg1, callback]);
     }
 };
 
 /**
  * ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight] [AGGREGATE SUM|MIN|MAX]
  *
- * (write, denyoom, movablekeys)
- * (arity -4, first key 0, last key 0)
+ * (write, denyoom, movablekeys, 0, 0, 0)
+ * (arity -4, first key NaN, last key NaN)
  *
  * Add multiple sorted sets and store the resulting sorted set in a new key.
  *
@@ -6786,5 +7660,5 @@ Commands.prototype.zunionstore = function()
             }
         }
     }
-    this._c(args);
+    return this._c(args);
 };

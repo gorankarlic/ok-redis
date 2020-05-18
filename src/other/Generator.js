@@ -103,11 +103,11 @@ for(let commands of map.values())
     + "\n{"
     + "\n    if(callback === void(0))"
     + "\n    {"
-    + "\n        this._c([" + flags + ", \"" + name + "\"]);"
+    + "\n        return this._cp([" + flags + ", \"" + name + "\"]);"
     + "\n    }"
     + "\n    else"
     + "\n    {"
-    + "\n        this._c([" + flags + ", \"" + name + "\", callback]);"
+    + "\n        this._cc([" + flags + ", \"" + name + "\", callback]);"
     + "\n    }"
     + "\n}";
 
@@ -118,11 +118,11 @@ for(let commands of map.values())
     + "\n{"
     + "\n    if(callback === void(0))"
     + "\n    {"
-    + "\n        this._c([" + flags + ", \"" + name + "\", arg0]);"
+    + "\n        return this._cp([" + flags + ", \"" + name + "\", arg0]);"
     + "\n    }"
     + "\n    else"
     + "\n    {"
-    + "\n        this._c([" + flags + ", \"" + name + "\", arg0, callback]);"
+    + "\n        this._cc([" + flags + ", \"" + name + "\", arg0, callback]);"
     + "\n    }"
     + "\n}";
 
@@ -134,11 +134,11 @@ for(let commands of map.values())
     + "\n{"
     + "\n    if(callback === void(0))"
     + "\n    {"
-    + "\n        this._c([" + flags + ", \"" + name + "\", arg0, arg1]);"
+    + "\n        return this._cp([" + flags + ", \"" + name + "\", arg0, arg1]);"
     + "\n    }"
     + "\n    else"
     + "\n    {"
-    + "\n        this._c([" + flags + ", \"" + name + "\", arg0, arg1, callback]);"
+    + "\n        this._cc([" + flags + ", \"" + name + "\", arg0, arg1, callback]);"
     + "\n    }"
     + "\n}";
 
@@ -202,7 +202,7 @@ for(let commands of map.values())
     + "\n            }"
     + "\n        }"
     + "\n    }"
-    + "\n    this._c(args);"
+    + "\n    return this._c(args);"
     + "\n}";
 
     let paramsImpl;
@@ -317,5 +317,5 @@ for(let commands of map.values())
     + ";";
     //code += async;
 }
-fs.writeFileSync(__dirname + "/../../main/redis/Commands.js", code, opts);
+fs.writeFileSync(__dirname + "/Commands.js", code, opts);
 console.log("Generated", map.size, "methods for", commands.length, "commands.");
