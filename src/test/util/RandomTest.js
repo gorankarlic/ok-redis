@@ -14,7 +14,7 @@ describe("Random", function()
             Random.seed(123);
         });
     });
-    
+
     describe("nextFloat", function()
     {
         it("should generate image", function()
