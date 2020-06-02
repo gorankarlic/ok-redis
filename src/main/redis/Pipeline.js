@@ -66,14 +66,38 @@ class Pipeline extends Commands
      */
     exec(callback)
     {
-        this._queue.addLast([0, "PING", () =>
+        if(callback === void null)
         {
-            callback(this._error, this._replies);
-            this._error = null;
-            this._replies = null;
-        }]);
-        this._client.commandPipeline(this._queue);
-        this._queue = null;
+            return new Promise((resolve, reject) =>
+            {
+                this._queue.addLast([0, "PING", () =>
+                {
+                    if(this._error)
+                    {
+                        reject(this._error);
+                    }
+                    else
+                    {
+                        resolve(this._replies);
+                    }
+                    this._error = null;
+                    this._replies = null;
+                }]);
+                this._client.commandPipeline(this._queue);
+                this._queue = null;
+            });
+        }
+        else
+        {
+            this._queue.addLast([0, "PING", () =>
+            {
+                callback(this._error, this._replies);
+                this._error = null;
+                this._replies = null;
+            }]);
+            this._client.commandPipeline(this._queue);
+            this._queue = null;
+        }
     }
 }
 

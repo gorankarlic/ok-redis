@@ -108,7 +108,7 @@ class Client
         this.socket.on("drain", this.ondrain.bind(this));
         this.socket.on("error", this.onerror.bind(this));
         this.socket.setNoDelay(true);
-        this.socket.unref();
+        //this.socket.unref();
     }
 
     /**

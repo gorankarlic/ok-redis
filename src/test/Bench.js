@@ -69,10 +69,11 @@ async function runSuite(name, after, before, bench)
     }
     for(const [name, f] of bench)
     {
+        process.stdout.write(`\t\t${name}\n`);
         const runner = f.length === 1 ? runCallback : f instanceof AsyncFunction ? runAsync : runSync;
         const [d, n] = await run(runner, f);
         const q = Math.round(n / d);
-        process.stdout.write(`\t\t${name}\n`);
+        process.stdout.cursorTo(0);
         process.stdout.write(`\t\t${q.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ").padStart(15)} ops/s\n`);
     }
     for(const f of after)
@@ -83,13 +84,26 @@ async function runSuite(name, after, before, bench)
 
 async function main(suites)
 {
-    await runAsync(1e6, async () => Promise.resolve(1));
-    await runCallback(1e6, (f) => f());
-    await runSync(1e6, () => 1);
-
-    for(const suite of suites)
+    if(suites.length === 0)
     {
-        await runSuite(...suite);
+        process.stderr.write("No test suites found.\n");
+        process.exit(1);
+    }
+    try
+    {
+        await runAsync(1e6, async () => Promise.resolve(1));
+        await runCallback(1e6, (f) => f());
+        await runSync(1e6, () => 1);
+
+        for(const suite of suites)
+        {
+            await runSuite(...suite);
+        }
+    }
+    catch(e)
+    {
+        process.stderr.write(`\t\t${e.stack}\n`);
+        process.exit(1);
     }
 }
 
@@ -108,10 +122,17 @@ global.suite = async function(name, f)
 
 const pattern = process.argv[process.argv.length - 1];
 const files = glob.sync(pattern);
-for(const file of files)
+if(files.length === 0)
 {
-    const path = `${process.cwd()}/${file}`;
-    require(path);
+    process.stderr.write(`No files matching ${pattern}\n`);
+    process.exit(1);
 }
-
+else
+{
+    for(const file of files)
+    {
+        const path = `${process.cwd()}/${file}`;
+        require(path);
+    }
+}
 main(suites);

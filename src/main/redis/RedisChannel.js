@@ -10,21 +10,29 @@ class RedisChannel
     /**
      * Creates a new instance of this class.
      *
-     * @param {Function} callback the callback to call.
      * @param {Object} opts the connection options.
      */
-    constructor(opts, callback)
+    constructor(opts)
     {
-        this._client = new Channel(opts, callback || this._dispatch.bind(this));
+        this._client = new Channel(opts, this._dispatch.bind(this));
         this._dispatches = new Map();
     }
 
     /**
      * Connects the client.
+     *
+     * @param {Function} done the function to call when connected.
      */
-    connect()
+    connect(done)
     {
-        this._client.connect();
+        if(done === void null)
+        {
+            return new Promise((resolve, reject) => this._client.connect((err, result) => err === null ? resolve(result) : reject(err)));
+        }
+        else
+        {
+            this._client.connect(done);
+        }
     }
 
     /**
@@ -108,7 +116,14 @@ class RedisChannel
      */
     quit(done)
     {
-        this._client.quit(done);
+        if(done === void null)
+        {
+            return new Promise((resolve, reject) => this._client.quit((err, result) => err === null ? resolve(result) : reject(err)));
+        }
+        else
+        {
+            this._client.quit(done);
+        }
     }
 
     /**

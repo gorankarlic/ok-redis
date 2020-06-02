@@ -24,12 +24,8 @@ class RespWriter extends OutputBuffer
      */
     static callbackFromArgs(args)
     {
-        const callback = args[args.length-1];
-        if(callback === void null || callback instanceof Function)
-        {
-            return callback;
-        }
-        return void null;
+        const callback = args[args.length - 1];
+        return callback instanceof Function ? callback : void null;
     }
 
     /**
@@ -130,7 +126,7 @@ class RespWriter extends OutputBuffer
     {
         let n = this.p(len);
         const b = this.b;
-        if(len <= 32)
+        if(len < 16)
         {
             let p = 0;
             while(p < len)
@@ -238,7 +234,7 @@ class RespWriter extends OutputBuffer
     {
         let n = this.p(len);
         const b = this.b;
-        if(len <= 64)
+        if(len < 64)
         {
             let p = 0;
             while(p < len)

@@ -25,11 +25,33 @@ class Multi extends Commands
         this._queue.addLast(args);
     }
 
+    _cc(args)
+    {
+        this._queue.addLast(args);
+    }
+
+    _cp(args)
+    {
+        this._queue.addLast(args);
+    }
+
     exec(callback)
     {
-        this._queue.addFirst([0, "MULTI"]);
-        this._queue.addLast([0, "EXEC", callback]);
-        this._client.commandPipeline(this._queue);
+        if(callback === void null)
+        {
+            return new Promise((resolve, reject) =>
+            {
+                this._queue.addFirst([0, "MULTI"]);
+                this._queue.addLast([0, "EXEC", (err, result) => err === null ? resolve(result) : reject(err)]);
+                this._client.commandPipeline(this._queue);
+            });
+        }
+        else
+        {
+            this._queue.addFirst([0, "MULTI"]);
+            this._queue.addLast([0, "EXEC", callback]);
+            this._client.commandPipeline(this._queue);
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 "use strict";
 
-const Random = require("../main/util/Random");
+const Random = require("../../main/util/Random");
 
 suite("Random", function()
 {

@@ -40,7 +40,7 @@ Commands.prototype._c = function(args)
 };
 
 /**
- * Runs the the specified command arguments using a callback function.
+ * Runs the the specified command arguments.
  *
  * @param {Array} args the command arguments.
  */
@@ -50,10 +50,9 @@ Commands.prototype._cc = function(args)
 };
 
 /**
- * Runs the the specified command arguments using an awaitable promise.
+ * Runs the the specified command arguments.
  *
  * @param {Array} args the command arguments.
- * @return {Promise} the awaitable promise.
  */
 Commands.prototype._cp = function(args)
 {
@@ -244,7 +243,7 @@ Commands.prototype.append = function(arg0, arg1, callback)
 };
 
 /**
- * ASKING
+ * ASKING 
  *
  * (fast, 0, 0)
  * (arity 1, first key 0, last key NaN)
@@ -4357,7 +4356,7 @@ Commands.prototype.pfmerge = function()
 };
 
 /**
- * PFSELFTEST
+ * PFSELFTEST 
  *
  * (admin, 0, 0, 0, @hyperloglog)
  * (arity 1, first key NaN, last key NaN)
@@ -6331,7 +6330,7 @@ Commands.prototype.subscribe = function()
 };
 
 /**
- * SUBSTR key arg arg
+ * SUBSTR key arg arg 
  *
  * (readonly, 1, 1, 1)
  * (arity 4, first key NaN, last key NaN)
@@ -6809,7 +6808,7 @@ Commands.prototype.watch = function()
 };
 
 /**
- * XSETID key arg
+ * XSETID key arg 
  *
  * (write, denyoom, fast, 1, 1, 1)
  * (arity 3, first key NaN, last key NaN)

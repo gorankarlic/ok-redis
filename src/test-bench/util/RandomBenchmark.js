@@ -1,6 +1,5 @@
 "use strict";
 
-const matcha = require("matcha");
 const Random = require("../../main/util/Random");
 
 suite("Random", function()

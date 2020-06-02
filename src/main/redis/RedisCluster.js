@@ -21,7 +21,7 @@ class RedisCluster extends Commands
 
     /**
      * Redis command batch.
-     * 
+     *
      * @returns {ClusterBatch} the newly created command batch.
      */
     batch()
@@ -31,10 +31,19 @@ class RedisCluster extends Commands
 
     /**
      * Connects the client.
+     *
+     * @param {Function} done the function to call when connected.
      */
-    connect()
+    connect(done)
     {
-        this._client.connect();
+        if(done === void null)
+        {
+            return new Promise((resolve, reject) => this._client.connect((err, result) => err === null ? resolve(result) : reject(err)));
+        }
+        else
+        {
+            this._client.connect(done);
+        }
     }
 
     /**
@@ -61,7 +70,14 @@ class RedisCluster extends Commands
      */
     quit(done)
     {
-        this._client.quit(done);
+        if(done === void null)
+        {
+            return new Promise((resolve, reject) => this._client.quit((err, result) => err === null ? resolve(result) : reject(err)));
+        }
+        else
+        {
+            this._client.quit(done);
+        }
     }
 }
 

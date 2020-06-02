@@ -25,10 +25,10 @@ class Redis
      * @return {Redis} the newly created and connected Redis client.
      * @see https://nodejs.org/api/net.html#net_socket_connect_options_connectlistener
      */
-    static connect(opts)
+    static async connect(opts)
     {
-        let client = new RedisClient(opts === void(null) ? Redis.OPTS : opts);
-        client.connect();
+        const client = new RedisClient(opts === void(null) ? Redis.OPTS : opts);
+        await client.connect();
         return client;
     }
 
@@ -39,10 +39,10 @@ class Redis
      * @param {Object} opts the connection options.
      * @return {Redis} the newly created and connected Redis client.
      */
-    static connectCluster(opts)
+    static async connectCluster(opts)
     {
-        let cluster = new RedisCluster(opts === void(null) ? Redis.OPTS : opts);
-        cluster.connect();
+        const cluster = new RedisCluster(opts === void(null) ? Redis.OPTS : opts);
+        await cluster.connect();
         return cluster;
     }
 
@@ -54,10 +54,10 @@ class Redis
      * @param {Function} callback the function to be called on incoming messages.
      * @return {Redis} the newly created and connected Redis channel.
      */
-    static connectChannel(opts, callback)
+    static async connectChannel(opts, callback)
     {
-        let channel = new RedisChannel(opts === void(null) ? Redis.OPTS : opts, callback);
-        channel.connect();
+        const channel = new RedisChannel(opts === void(null) ? Redis.OPTS : opts, callback);
+        await channel.connect();
         return channel;
     }
 }
