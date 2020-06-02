@@ -9,15 +9,18 @@
   "repository": "https://github.com/gorankarlic/ok-redis.git",
   "scripts": {
     "docs": "node_modules/.bin/jsdoc -r src",
-    "redis": "cd target && curl -o redis-4.0.9.tar.gz http://download.redis.io/releases/redis-4.0.9.tar.gz && tar xzf redis-4.0.9.tar.gz && cd redis-4.0.9 && make",
-    "test": "./node_modules/.bin/istanbul cover --dir ./target/coverage --include-all-sources --root ./src/main -x Commands.js ./node_modules/.bin/_mocha -- \"src/test/**/*Test.js\" -R spec"
+    "redis": "cd target && curl -o redis-6.0.3.tar.gz http://download.redis.io/releases/redis-6.0.3.tar.gz && tar xzf redis-6.0.3.tar.gz && cd redis-6.0.3 && make",
+    "test": "npx nyc --all --exclude src/main/redis/Commands.js --include \"src/main/**/*.js\" --report-dir target/coverage --reporter html --temp-dir target/.nyc_output -- npx mocha \"src/test/**/*Test.js\""
   },
   "devDependencies": {
+    "@c4312/matcha": "^1.2.0",
+    "glob": "^7.1.6",
     "istanbul": "1.0.0-alpha.2",
-    "jsdoc": "3.5.5",
-    "matcha": "0.7.0",
-    "measurestuff": "^0.3.0",
-    "mocha": "4.0.1",
-    "pngjs": "3.3.1"
+    "jsdoc": "3.6.4",
+    "measurestuff": "^0.4.0",
+    "mocha": "7.1.2",
+    "npm-check-updates": "^6.0.1",
+    "nyc": "^15.0.1",
+    "pngjs": "5.0.0"
   }
 }
