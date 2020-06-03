@@ -21,6 +21,11 @@ suite("Redis (TCP/IP)", async function()
         client.ping(done);
     });
 
+    bench("ping (callback)", function(done)
+    {
+        client.ping(done);
+    });
+
     bench("ping (1000 pipeline, async)", async function()
     {
         const pipeline = client.pipeline();

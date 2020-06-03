@@ -4,6 +4,11 @@ const glob = require("glob");
 
 const AsyncFunction = (async () => void null).constructor;
 
+function selectRunner(f)
+{
+    return f.length === 1 ? runCallback : f instanceof AsyncFunction ? runAsync : runSync;
+};
+
 async function runAsync(n, f)
 {
     const a = new Array(n);
@@ -65,12 +70,13 @@ async function runSuite(name, after, before, bench)
     process.stdout.write(`\t${name}\n`);
     for(const f of before)
     {
-        await f();
+        const runner = selectRunner(f);
+        await runner(1, f);
     }
     for(const [name, f] of bench)
     {
         process.stdout.write(`\t\t${name}\n`);
-        const runner = f.length === 1 ? runCallback : f instanceof AsyncFunction ? runAsync : runSync;
+        const runner = selectRunner(f);
         const [d, n] = await run(runner, f);
         const q = Math.round(n / d);
         process.stdout.cursorTo(0);
@@ -78,7 +84,8 @@ async function runSuite(name, after, before, bench)
     }
     for(const f of after)
     {
-        await f();
+        const runner = selectRunner(f);
+        await runner(1, f);
     }
 }
 
