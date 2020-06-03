@@ -48,6 +48,16 @@ suite("redis-fast-driver (TCP/IP)", async function()
         client.rawCall(SET, done);
     });
 
+    bench("set (async)", async function()
+    {
+        await client.rawCallAsync(SET);
+    });
+
+    bench("set (async)", async function()
+    {
+        await client.rawCallAsync(SET);
+    });
+
     after(function(done)
     {
         client.once("disconnect", done);
@@ -185,6 +195,21 @@ suite("OK-Redis (TCP/IP)", async function()
     bench("set (callback)", function(done)
     {
         client.set("foo", "bar", done);
+    });
+
+    bench("set (callback)", function(done)
+    {
+        client.set("foo", "bar", done);
+    });
+
+    bench("set (async)", async function()
+    {
+        await client.set("foo", "bar");
+    });
+
+    bench("set (async)", async function()
+    {
+        await client.set("foo", "bar");
     });
 
     after(async function()

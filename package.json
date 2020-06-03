@@ -5,10 +5,10 @@
   "private": true,
   "license": "CC-BY-NC-SA-4.0",
   "version": "0.9.0",
-  "dependencies": {
-  },
+  "dependencies": {},
   "repository": "https://github.com/gorankarlic/ok-redis.git",
   "scripts": {
+    "bench": "node src/test/Bench.js \"src/test/**/*Benchmark.js\"",
     "docs": "npx jsdoc -r src",
     "redis": "cd target && curl -o redis-6.0.3.tar.gz http://download.redis.io/releases/redis-6.0.3.tar.gz && tar xzf redis-6.0.3.tar.gz && cd redis-6.0.3 && make",
     "test": "npx nyc --all --exclude src/main/redis/Commands.js --include \"src/main/**/*.js\" --report-dir target/coverage --reporter html --reporter text --temp-dir target/.nyc_output -- npx mocha \"src/test/**/*Test.js\""
@@ -20,6 +20,7 @@
     "ioredis": "^4.17.3",
     "jsdoc": "3.6.4",
     "mocha": "7.1.2",
+    "noderis": "^0.9.8",
     "npm-check-updates": "^6.0.1",
     "nyc": "^15.0.1",
     "pngjs": "5.0.0",

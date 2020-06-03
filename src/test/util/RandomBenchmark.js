@@ -13,21 +13,4 @@ suite("Random", function()
     {
         return Math.floor(Math.random() * 16384);
     });
-
-    bench("range", function()
-    {
-        return 1;
-    });
-
-    bench("function", function()
-    {
-    });
-
-    bench("function", function()
-    {
-    });
-
-    bench("function", function()
-    {
-    });
 });
