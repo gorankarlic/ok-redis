@@ -143,8 +143,8 @@ class Client
      */
     ondata(buffer)
     {
-        let rb = this.rb;
-        let reader = this.reader;
+        const rb = this.rb;
+        const reader = this.reader;
         rb.replace(buffer);
         while(rb.hasRemaining() && !reader.read(rb))
         {
@@ -168,7 +168,7 @@ class Client
      */
     onerror(error)
     {
-        console.error("Redis client %s", error.stack);
+        process.stderr.write(`Redis client ${error.stack}\n`);
         throw error;
     }
 
