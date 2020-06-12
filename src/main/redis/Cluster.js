@@ -16,6 +16,11 @@ const RedisMovedError = require("./RedisMovedError");
  */
 class Cluster
 {
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param {Object} opts the connection options.
+     */
     constructor(opts)
     {
         this.client = null;
@@ -30,17 +35,20 @@ class Cluster
     /**
      * Connects to all nodes in a cluster.
      *
-     * @public
+     * @param {Function} done the function to call when connected.
      */
-    connect()
+    connect(done)
     {
-        if(this.client !== null)
+        if(this.client === null)
+        {
+            this.client = new ClusterNode(this, this.opts);
+            this.client.connect(done);
+            this.reconfigure();
+        }
+        else
         {
             throw new Error("already connected");
         }
-        this.client = new ClusterNode(this, this.opts);
-        this.client.connect();
-        this.reconfigure();
     };
 
     /**
