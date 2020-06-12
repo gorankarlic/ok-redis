@@ -52,11 +52,27 @@ class RespReader
     }
 
     /**
+     * Creates a new bulk reply reader.
+     */
+    createBulk()
+    {
+        return new Bulk();
+    }
+
+    /**
+     * Creates a new multi reply reader.
+     */
+    createMulti()
+    {
+        return new Multi();
+    }
+
+    /**
      * Reads the next RESP reply from the buffer.
      *
      * @public
      * @param {Buffer} b the buffer to read from.
-     * @returns {Number} the number of bytes needed to finish reading.
+     * @returns {Boolean} indicates if more bytes are needed to finish reading.
      */
     read(b)
     {
@@ -76,7 +92,7 @@ class RespReader
      *
      * @private
      * @param {Buffer} b the buffer to read from.
-     * @returns {Number} the number of bytes needed to finish reading.
+     * @returns {Boolean} indicates if more bytes are needed to finish reading.
      */
     readNext(b)
     {
@@ -124,11 +140,11 @@ class RespReader
         {
             case 0x24:
             {
-                return new Bulk();
+                return this.createBulk();
             }
             case 0x2A:
             {
-                return new Multi();
+                return this.createMulti();
             }
             case 0x2B:
             {
@@ -167,6 +183,31 @@ class RespReader
     {
         return this.r;
     }
+
+    /**
+     * Creates the RESP reader for the specified return type.
+     *
+     * @param {Object} returns the reader return type.
+     * @returns {RespReader}
+     */
+    static createReader(returns)
+    {
+        switch(returns)
+        {
+            case Buffer:
+            {
+                return new RespReader();
+            }
+            case String:
+            {
+                return new RespStringReader();
+            }
+            default:
+            {
+                throw new Error(`illegal reader mode ${returns}`);
+            }
+        }
+    }
 }
 
 /**
@@ -183,6 +224,15 @@ class Status
         this.r = null;
     }
 
+    /**
+     * Reads the status message.
+     *
+     * 1. Read ASCII character sequence, at least 2 bytes needed.
+     * 2. Read CRLF, no further bytes needed.
+     *
+     * @param {RespBuffer} rb the RESP buffer.
+     * @returns {Boolean} indicates if any more bytes are needed to finish reading.
+     */
     read(rb)
     {
         const b = rb.b;
@@ -225,7 +275,12 @@ class Status
         this.s = s;
         return s > 0;
     }
-    
+
+    /**
+     * Returns the reader result.
+     *
+     * @returns {String} the reader result.
+     */
     result()
     {
         return this.r;
@@ -300,12 +355,17 @@ class Failure extends Status
         this.s = 2;
         this.r = null;
     }
-    
+
+    /**
+     * Returns the reader result.
+     *
+     * @returns {RedisError} the reader result.
+     */
     result()
     {
         return Failure.resultFromString(this.r);
     }
-    
+
     /**
      * Parses a REPL error reply string.
      *
@@ -370,19 +430,25 @@ class Numeral
     /**
      * Reads the numeral message.
      *
+     * @param {RespBuffer} rb the RESP buffer.
+     * @returns {Boolean} indicates if any more bytes are needed to finish reading.
+     */
+    read(rb)
+    {
+        return this.readNumber(rb);
+    }
+
+    /**
+     * Reads the numeral message.
+     *
      * 1. Read minus or digit, at least 3 bytes needed.
      * 2. Read digit, at least 2 bytes needed.
      * 3. Read CR, 1 byte needed.
      * 4. Read LF, no further bytes needed.
      *
-     * @param {RespBuffer} b the RESP buffer.
+     * @param {RespBuffer} rb the RESP buffer.
      * @returns {Boolean} indicates if any more bytes are needed to finish reading.
      */
-    read(b)
-    {
-        return this.readNumber(b);
-    }
-
     readNumber(rb)
     {
         let s = this.s;
@@ -425,6 +491,12 @@ class Numeral
         this.s = s;
         return s > 0;
     }
+
+    /**
+     * Returns the reader result.
+     *
+     * @returns {Number} the reader result.
+     */
     result()
     {
         return this.m ? -this.n : this.n;
@@ -519,7 +591,12 @@ class Bulk extends Numeral
         this.n = n;
         return n > -2;
     }
-    
+
+    /**
+     * Returns the reader result.
+     *
+     * @returns {Buffer} the reader result.
+     */
     result()
     {
         return this.r;
@@ -539,7 +616,7 @@ class Bulk extends Numeral
 }
 
 /**
- * RESP multi reply ("*")
+ * RESP multi reply reader ("*").
  */
 class Multi extends Numeral
 {
@@ -551,6 +628,16 @@ class Multi extends Numeral
         super();
         this.r = null;
         this.q = null;
+    }
+
+    /**
+     * Creates a reply reader.
+     *
+     * @returns {RespReader} the newly created reader.
+     */
+    createReader()
+    {
+        return new RespReader();
     }
 
     /**
@@ -583,7 +670,7 @@ class Multi extends Numeral
             {
                 return false;
             }
-            q = new RespReader();
+            q = this.createReader();
         }
         else
         {
@@ -605,11 +692,94 @@ class Multi extends Numeral
         }
         return false;
     }
-    
-    result()
+
+    /**
+     * Returns the reader result.
+     *
+     * @returns {Array} the reader result.
+     */
+     result()
     {
         return this.r;
     }
 }
 
-module.exports = RespReader;
+/**
+ * Redis Protocol (RESP) reader that reads buffers as UTF-8 strings.
+ */
+class RespStringReader extends RespReader
+{
+    /**
+     * Creates a new instance of this class.
+     */
+    constructor()
+    {
+        super();
+    }
+
+    /**
+     * Creates a new bulk reply reader.
+     */
+    createBulk()
+    {
+        return new BulkString();
+    }
+
+    /**
+     * Creates a new multi reply reader.
+     */
+    createMulti()
+    {
+        return new MultiString();
+    }
+}
+
+/**
+ * RESP builk reply string reader ("$").
+ */
+class BulkString extends Bulk
+{
+    /**
+     * Creates a new instance of this class.
+     */
+    constructor()
+    {
+        super();
+    }
+
+    /**
+     * Returns the reader result.
+     *
+     * @returns {String} the reader result.
+     */
+    result()
+    {
+        return this.r.toString();
+    }
+}
+
+/**
+ * RESP multi reply string reader ("*").
+ */
+class MultiString extends Multi
+{
+    /**
+     * Creates a new instance of this class.
+     */
+    constructor()
+    {
+        super();
+    }
+
+    /**
+     * Creates a reply reader.
+     *
+     * @returns {RespReader} the newly created reader.
+     */
+    createReader()
+    {
+        return new RespStringReader();
+    }
+}
+
+module.exports = {RespReader};

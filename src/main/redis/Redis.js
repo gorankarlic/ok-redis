@@ -3,6 +3,7 @@
 const RedisChannel = require("./RedisChannel");
 const RedisClient = require("./RedisClient");
 const RedisCluster = require("./RedisCluster");
+const RedisOpts = require("./RedisOpts");
 
 /**
  * Open Konspiracy Redis Client API.
@@ -21,13 +22,13 @@ class Redis
      * Connect with a single Redis instance.
      *
      * @public
-     * @param {Object} opts the connection options.
+     * @param {RedisOpts} opts the connection options.
      * @return {Redis} the newly created and connected Redis client.
      * @see https://nodejs.org/api/net.html#net_socket_connect_options_connectlistener
      */
-    static async connect(opts)
+    static async connect(opts = new RedisOpts())
     {
-        const client = new RedisClient(opts === void(null) ? Redis.OPTS : opts);
+        const client = new RedisClient(opts.opts);
         await client.connect();
         return client;
     }
@@ -36,12 +37,12 @@ class Redis
      * Connect with a Redis cluster.
      *
      * @public
-     * @param {Object} opts the connection options.
+     * @param {RedisOpts} opts the connection options.
      * @return {Redis} the newly created and connected Redis client.
      */
-    static async connectCluster(opts)
+    static async connectCluster(opts = new RedisOpts())
     {
-        const cluster = new RedisCluster(opts === void(null) ? Redis.OPTS : opts);
+        const cluster = new RedisCluster(opts.opts);
         await cluster.connect();
         return cluster;
     }
@@ -50,28 +51,25 @@ class Redis
      * Connect with a Redis channel for subscriptions.
      *
      * @public
-     * @param {Object} opts the connection options.
-     * @param {Function} callback the function to be called on incoming messages.
+     * @param {RedisOpts} opts the connection options.
      * @return {Redis} the newly created and connected Redis channel.
      */
-    static async connectChannel(opts, callback)
+    static async connectChannel(opts = new RedisOpts())
     {
-        const channel = new RedisChannel(opts === void(null) ? Redis.OPTS : opts, callback);
+        const channel = new RedisChannel(opts.opts);
         await channel.connect();
         return channel;
     }
-}
 
-/**
- * Default redis options.
- *
- * @private
- * @type Object
- */
-Redis.OPTS =
-{
-    host: String(process.env.REDIS_HOST || "localhost"),
-    port: Number(process.env.REDIS_PORT || 6379)
-};
+    /**
+     * Creates a new instance of Redis options.
+     *
+     * @returns {RedisOpts} the newly created instance of Redis options.
+     */
+    static opts()
+    {
+        return new RedisOpts();
+    }
+}
 
 module.exports = Redis;
