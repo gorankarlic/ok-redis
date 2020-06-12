@@ -89,7 +89,7 @@ describe("RedisClient", function()
             client.connect((err) =>
             {
                 assert.strictEqual(err, null);
-                client.echo("test", (err, result) =>
+                client.buffer().echo("test", (err, result) =>
                 {
                     assert.strictEqual(err, null);
                     assert.deepStrictEqual(result, Buffer.from("test"));

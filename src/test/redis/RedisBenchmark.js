@@ -9,16 +9,32 @@ suite("Redis (TCP/IP)", async function()
     before(async function()
     {
         client = await Redis.connect();
+        await client.set("foo", "bar");
+    });
+
+    bench("get (async)", async function()
+    {
+        await client.get("foo");
+    });
+
+    bench("get (callback)", function(done)
+    {
+        client.get("foo", done);
+    });
+
+    bench("get (string, async)", async function()
+    {
+        await client.string().get("foo");
+    });
+
+    bench("get (string, callback)", function(done)
+    {
+        client.string().get("foo", done);
     });
 
     bench("ping (async)", async function()
     {
         await client.ping();
-    });
-
-    bench("ping (callback)", function(done)
-    {
-        client.ping(done);
     });
 
     bench("ping (callback)", function(done)
@@ -44,6 +60,16 @@ suite("Redis (TCP/IP)", async function()
             pipeline.ping();
         }
         pipeline.exec(done);
+    });
+
+    bench("set (async)", async function()
+    {
+        await client.set("foo", "bar");
+    });
+
+    bench("set (callback)", function(done)
+    {
+        client.set("foo", "bar", done);
     });
 
     after(async function()

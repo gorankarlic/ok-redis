@@ -15,7 +15,6 @@ class Commands extends AbstractCommands
     constructor(client)
     {
         super(client);
-        this._strings = new Strings(client);
     }
 
     /**
@@ -35,14 +34,14 @@ class Commands extends AbstractCommands
      */
     string()
     {
-        return this._strings;
+        return new Strings(this._client);
     }
 }
 
 /**
- * Commands that return a buffer as a UTF-8 string.
+ * UTF-8 string commands.
  */
-class Strings extends AbstractCommands
+class Strings extends Commands
 {
     /**
      * Creates a new instance of this class.
@@ -52,6 +51,26 @@ class Strings extends AbstractCommands
     constructor(client)
     {
         super(client);
+    }
+
+    /**
+     * Command variants that return a buffer.
+     *
+     * @returns {Redis} the command variants that return a buffer.
+     */
+    buffer()
+    {
+        return new Commands(this._client);
+    }
+
+    /**
+     * Command variants that return a UTF-8 string.
+     *
+     * @returns {Redis} the command variants that return a UTF-8 string.
+     */
+    string()
+    {
+        return this;
     }
 
     /**
