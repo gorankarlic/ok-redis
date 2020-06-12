@@ -15,7 +15,8 @@ class RedisChannel
     constructor(opts)
     {
         this._client = new Channel(opts, this._dispatch.bind(this));
-        this._dispatches = new Map();
+        this._listener = this._dispatchChannel.bind(this);
+        this._listeners = new Map();
     }
 
     /**
@@ -36,37 +37,60 @@ class RedisChannel
     }
 
     /**
-     * Sets the callback function that will receive messages from the specified
-     * channel.
+     * Adds a listener for a channel.
      *
-     * @param {String} channel the channel to dispatch to.
-     * @param {Function} callback the callback to call.
+     * @param {String} channel the channel name.
+     * @param {Function} listener the function to call on an incoming message.
      */
-    dispatch(channel, callback)
+    addListener(channel, listener)
     {
-        if(callback === null || callback === void(0))
-        {
-            this._dispatches.delete(channel.toString("utf8"));
-        }
-        else
-        {
-            this._dispatches.set(channel.toString("utf8"), callback);
-        }
+        this._listeners.set(channel, listener);
     }
 
     /**
-     * Dispatches the message to the corresponding callback by channel name.
+     * Removes the listener for a channel.
+     *
+     * @param {String} channel the channel name.
+     */
+    removeListener(channel)
+    {
+        this._listeners.delete(channel);
+    }
+
+    /**
+     * Sets the listener that will receive messages for all channels.
+     *
+     * @param {Function} listener the function to call on an incoming message.
+     */
+    dispatch(listener)
+    {
+        this._listener = listener;
+    }
+
+    /**
+     * Dispatches the message to the listener.
      *
      * @param {Buffer} channel the channel name.
      * @param {Buffer} message the received message.
      */
     _dispatch(channel, message)
     {
-        const callback = this._dispatches.get(channel.toString("utf8"));
-        if(callback !== void(null))
+        this._listener(channel, message);
+    }
+
+    /**
+     * Dispatches the message to the corresponding listener by channel name.
+     *
+     * @param {Buffer} channel the channel name.
+     * @param {Buffer} message the received message.
+     */
+    _dispatchChannel(channel, message)
+    {
+        const listener = this._listeners.get(channel.toString());
+        if(listener !== void(null))
         {
-            callback(channel, message);
-        };
+            listener(channel, message);
+        }
     }
 
     /**
