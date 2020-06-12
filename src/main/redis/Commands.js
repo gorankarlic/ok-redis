@@ -16,12 +16,22 @@ class Commands extends AbstractCommands
     {
         super(client);
         this._strings = new Strings(client);
-     }
+    }
 
     /**
-     * Commands that return a buffer as a UTF-8 string.
+     * Command variants that return a buffer.
      *
-     * @returns {Redis} the commands that return a buffer as a UTF-8 string.
+     * @returns {Redis} the command variants that return a buffer.
+     */
+    buffer()
+    {
+        return this;
+    }
+
+    /**
+     * Command variants that return a UTF-8 string.
+     *
+     * @returns {Redis} the command variants that return a UTF-8 string.
      */
     string()
     {
