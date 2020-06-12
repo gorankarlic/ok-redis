@@ -1,64 +1,60 @@
 "use strict";
 
 /**
- * Creates a new instance of this class.
- *
- * @class
- * @classdesc Redis commands.
- * @param {AbstractClient} client the Redis client that will run the commands.
+ * Redis commands.
  */
-function Commands(client)
+class AbstractCommands
 {
-    this._client = client;
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param {Client} client the Redis client that will run the commands.
+     */
+    constructor(client)
+    {
+        this._client = client;
+    }
+
+    /**
+     * Runs the the specified command arguments.
+     *
+     * @param {Array} args the command arguments.
+     */
+    _c(args)
+    {
+        if(args[args.length - 1] instanceof Function)
+        {
+            return this._cc(args);
+        }
+        else
+        {
+            return this._cp(args);
+        }
+    }
+
+    /**
+     * Runs the the specified command arguments with a callback.
+     *
+     * @param {Array} args the command arguments.
+     */
+    _cc(args)
+    {
+        this._client.command(args);
+    }
+
+    /**
+     * Runs the the specified command arguments with a promise.
+     *
+     * @param {Array} args the command arguments.
+     */
+    _cp(args)
+    {
+        return new Promise((resolve, reject) =>
+        {
+            args.push((err, result) => err === null ? resolve(result) : reject(err));
+            this._client.command(args);
+        });
+    }/*[GENERATED]*/
 }
 
-Commands.prototype.constructor = Commands;
-module.exports = Commands;
-
-/**
- * Redis client that will run the commands.
- *
- * @type AbstractClient
- */
-Commands.prototype._client = null;
-
-/**
- * Runs the the specified command arguments.
- *
- * @param {Array} args the command arguments.
- */
-Commands.prototype._c = function(args)
-{
-    if(args[args.length - 1] instanceof Function)
-    {
-        return this._cc(args);
-    }
-    else
-    {
-        return this._cp(args);
-    }
-};
-
-/**
- * Runs the the specified command arguments.
- *
- * @param {Array} args the command arguments.
- */
-Commands.prototype._cc = function(args)
-{
-    this._client.command(args);
-};
-
-/**
- * Runs the the specified command arguments.
- *
- * @param {Array} args the command arguments.
- */
-Commands.prototype._cp = function(args)
-{
-    return new Promise((resolve, reject) =>
-    {
-        args.push((err, result) => err === null ? resolve(result) : reject(err));
-        this._client.command(args);
-    });
-};
+module.exports = AbstractCommands;

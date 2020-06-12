@@ -70,40 +70,40 @@ Delete a key asynchronously in another thread. Otherwise it is just as DEL, but 
 WAIT numreplicas timeout
 Wait for the synchronous replication of all the write commands sent in the context of the current connection
 3.0.0
-HOST: ...options...
-Help not available
-not known
-REPLCONF ...options...
-Help not available
-not known
-BITFIELD_RO key ...options...
-Help not available
-not known
 PFSELFTEST 
 Help not available
 not known
 GEORADIUSBYMEMBER_RO key arg arg arg ...options...
 Help not available
 not known
-XSETID key arg 
+GEORADIUS_RO key arg arg arg arg ...options...
 Help not available
 not known
-RESTORE-ASKING key arg arg ...options...
-Help not available
-not known
-SUBSTR key arg arg 
-Help not available
-not known
-POST ...options...
+REPLCONF ...options...
 Help not available
 not known
 PFDEBUG arg arg ...options...
 Help not available
 not known
-GEORADIUS_RO key arg arg arg arg ...options...
+RESTORE-ASKING key arg arg ...options...
+Help not available
+not known
+POST ...options...
+Help not available
+not known
+BITFIELD_RO key ...options...
+Help not available
+not known
+HOST: ...options...
+Help not available
+not known
+SUBSTR key arg arg 
 Help not available
 not known
 ASKING 
+Help not available
+not known
+XSETID key arg 
 Help not available
 not known
 APPEND key value

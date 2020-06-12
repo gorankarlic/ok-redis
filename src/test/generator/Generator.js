@@ -63,7 +63,8 @@ for(let n = 0; n < commands.length; n++)
     }
 }
 
-let code = fs.readFileSync(__dirname + "/GeneratorTemplate.js", "ascii");
+let template = fs.readFileSync(__dirname + "/GeneratorTemplate.js", "ascii");
+let code = "";
 for(let commands of map.values())
 {
     let command = commands[0];
@@ -99,7 +100,7 @@ for(let commands of map.values())
     let flags = '0x' + Number((rw << 16) | index).toString(16);
     let paramsArg0 = ""
     + "\n * @param {Function} callback the function to call when done.";
-    let commandArg0 = "function(callback)"
+    let commandArg0 = "(callback)"
     + "\n{"
     + "\n    if(callback === void(0))"
     + "\n    {"
@@ -114,7 +115,7 @@ for(let commands of map.values())
     let paramsArg1 = ""
     + "\n * @param {Object} arg0 the first argument."
     + "\n * @param {Function} callback the function to call when done.";
-    let commandArg1 = "function(arg0, callback)"
+    let commandArg1 = "(arg0, callback)"
     + "\n{"
     + "\n    if(callback === void(0))"
     + "\n    {"
@@ -130,7 +131,7 @@ for(let commands of map.values())
     + "\n * @param {Object} arg0 the first argument."
     + "\n * @param {Object} arg1 the second argument."
     + "\n * @param {Function} callback the function to call when done.";
-    let commandArg2 = "function(arg0, arg1, callback)"
+    let commandArg2 = "(arg0, arg1, callback)"
     + "\n{"
     + "\n    if(callback === void(0))"
     + "\n    {"
@@ -143,7 +144,7 @@ for(let commands of map.values())
     + "\n}";
 
     let paramsComplex = "";
-    let commandComplex = "function()"
+    let commandComplex = "()"
     + "\n{"
     + "\n    let args;"
     + "\n    const len = arguments.length;"
@@ -260,62 +261,11 @@ for(let commands of map.values())
     }
     method = method
     + "\n */"
-    + "\nCommands.prototype." + methodName + " = "
+    + "\n" + methodName
     + commandImpl
-    + ";";
-    code += method;
-
-    let async = ""
-    + "\n"
-    + "\n/**";
-    for(let n = 0; n < commands.length; n++)
-    {
-        let command = commands[n];
-        let args = command[0].split(" ");
-        let name = args[0];
-        let subname = /^[A-Z]$/.test(args[1]) ? args[1] : null;
-        let url = subname === null ? name : name + "-" + subname;
-        async = async
-        + "\n * " + command[0]
-        + "\n *"
-        + "\n * (" + modes.join(", ") + ")"
-        + "\n * (arity " + arity + ", first key " + index + ", last key " + index2 + ")"
-        + "\n *"
-        + "\n * " + command[1] + (command[1].endsWith(".") ? "" : ".")
-        + "\n *"
-        + paramsImpl
-        + "\n * @see http://redis.io/commands/" + url.toLowerCase()
-        + "\n * @since " + command[2];
-        if(n !== commands.length - 1)
-        {
-            async = async
-            + "\n *"
-            + "\n * ----"
-            + "\n *";
-        }
-    }
-    async = async
-    + "\n */"
-    + "\nCommands.prototype.async_" + methodName + " = function(...args)"
-    + "\n{"
-    + "\n    return new Promise((resolve, reject) =>"
-    + "\n    {"
-    + "\n        args.push((err, result) =>"
-    + "\n        {"
-    + "\n            if(err)"
-    + "\n            {"
-    + "\n               reject(err);"
-    + "\n            }"
-    + "\n            else"
-    + "\n            {"
-    + "\n               resolve(result);"
-    + "\n            }"
-    + "\n        });"
-    + "\n        this." + methodName + ".apply(this, args);"
-    + "\n    });"
-    + "\n}"
-    + ";";
-    //code += async;
+    + "";
+    code += method.replace(/\n(?!\n)/gm, "\n    ");
 }
-fs.writeFileSync(__dirname + "/Commands.js", code, opts);
+const output = template.replace("/*[GENERATED]*/", code);
+fs.writeFileSync(__dirname + "/AbstractCommands.js", output, opts);
 console.log("Generated", map.size, "methods for", commands.length, "commands.");
