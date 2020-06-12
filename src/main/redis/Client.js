@@ -3,7 +3,7 @@
 const net = require("net");
 const Deque = require("../util/Deque");
 const RespBuffer = require("./RespBuffer");
-const RespReader = require("./RespReader");
+const {RespReader, RespStringReader} = require("./RespReader");
 const RespWriter = require("./RespWriter");
 
 /**
@@ -20,13 +20,20 @@ class Client
         this.opts = opts;
         this.queue = new Deque();
         this.rb = new RespBuffer(Buffer.allocUnsafe(0));
-        this.reconnect = true;
-        this.reader = new RespReader();
+        this.reconnect = null;
+        this.reader = RespReader.createReader(opts.returns);
         this.ready = false;
-        this.socket = null;
         this.uncorked = true;
         this.uncorker = this.uncork.bind(this);
         this.writer = new RespWriter();
+
+        this.socket = new net.Socket();
+        this.socket.on("connect", this.onconnect.bind(this))
+        this.socket.on("close", this.onclose.bind(this));
+        this.socket.on("data", this.ondata.bind(this));
+        this.socket.on("drain", this.ondrain.bind(this));
+        this.socket.on("error", this.onerror.bind(this));
+        this.socket.setNoDelay(true);
     }
 
     /**
@@ -92,23 +99,9 @@ class Client
      */
     connect(done)
     {
-        if(this.socket !== null)
-        {
-            throw new Error("already connected");
-        }
-        this.reconnect = false;
-        this.socket = net.createConnection(this.opts, this.onconnect.bind(this));
-        if(done !== void null)
-        {
-            this.socket.once("connect", () => void done(null));
-            this.socket.once("error", (err) => void done(err));
-        }
-        this.socket.on("close", this.onclose.bind(this));
-        this.socket.on("data", this.ondata.bind(this));
-        this.socket.on("drain", this.ondrain.bind(this));
-        this.socket.on("error", this.onerror.bind(this));
-        this.socket.setNoDelay(true);
-        //this.socket.unref();
+        this.reconnect = null;
+        this.socket.connect(this.opts, () => done(null));
+        this.socket.once("error", done);
     }
 
     /**
@@ -117,12 +110,14 @@ class Client
     onclose()
     {
         this.ready = false;
-        this.socket = null;
         this.uncorked = true;
-        this.writer.realloc(this.writer.n);
-        if(this.reconnect)
+        if(this.reconnect === true)
         {
-            this.connect();
+            this.socket.connect(this.opts);
+        }
+        else
+        {
+            this.writer.realloc(this.writer.n);
         }
     }
 
@@ -131,9 +126,11 @@ class Client
      */
     onconnect()
     {
-        this.reconnect = true;
-        this.queue.addFirst([0, "PING", this.onready.bind(this)]);
-        this.socket.write(Buffer.from("*1\r\n$4\r\nPING\r\n", "ascii"));
+        if(this.reconnect === null)
+        {
+            this.reconnect = true;
+        }
+        this.onready();
     }
 
     /**
@@ -169,7 +166,7 @@ class Client
     onerror(error)
     {
         process.stderr.write(`Redis client ${error.stack}\n`);
-        throw error;
+        //throw error;
     }
 
     /**
@@ -228,10 +225,6 @@ class Client
      */
     quit(done)
     {
-        if(this.socket === null)
-        {
-            throw new Error("not connected");
-        }
         this.command([0, "QUIT", done]);
         this.ready = false;
         this.reconnect = false;
