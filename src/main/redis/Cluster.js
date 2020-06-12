@@ -62,7 +62,7 @@ class Cluster
     {
         const host = hostPort[0].toString("utf8");
         const port = hostPort[1];
-        const opts = {host: host, port: port};
+        const opts = Object.assign({}, this.opts, {host: host, port: port});
         return new ClusterNode(this, opts);
     };
 
