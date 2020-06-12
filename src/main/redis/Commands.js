@@ -16,21 +16,21 @@ class Commands extends AbstractCommands
     {
         super(client);
         this._strings = new Strings(client);
-    }
+     }
 
     /**
-     * Redis commands that convert result buffers to strings.
+     * Commands that return a buffer as a UTF-8 string.
      *
-     * @returns {Redis} the commands that convert result buffers to strings.
+     * @returns {Redis} the commands that return a buffer as a UTF-8 string.
      */
-    strings()
+    string()
     {
         return this._strings;
     }
 }
 
 /**
- * Redis commands that convert result buffers to strings.
+ * Commands that return a buffer as a UTF-8 string.
  */
 class Strings extends AbstractCommands
 {
@@ -44,17 +44,6 @@ class Strings extends AbstractCommands
         super(client);
     }
 
-
-    /**
-     * Redis commands that convert result buffers to strings.
-     *
-     * @returns {Redis} the commands that convert result buffers to strings.
-     */
-    strings()
-    {
-        return this;
-    }
-
     /**
      * Runs the the specified command arguments with a callback.
      *
@@ -63,7 +52,7 @@ class Strings extends AbstractCommands
     _cc(args)
     {
         const callback = args.pop();
-        args.push((err, result) => callback(err, Strings.mapper(result)));
+        args.push((err, result) => callback(err, Strings._mapper(result)));
         this._client.command(args);
     }
 
@@ -76,7 +65,7 @@ class Strings extends AbstractCommands
     {
         return new Promise((resolve, reject) =>
         {
-            args.push((err, result) => err === null ? resolve(Strings.mapper(result)) : reject(err));
+            args.push((err, result) => err === null ? resolve(Strings._mapper(result)) : reject(err));
             this._client.command(args);
         });
     }
@@ -87,11 +76,11 @@ class Strings extends AbstractCommands
      * @param {Object} r the result to map.
      * @returns {Object} the result with buffers mapped to strings.
      */
-    static mapper(r)
+    static _mapper(r)
     {
         if(r instanceof Array)
         {
-            return r.map((r) => mapper(r));
+            return r.map(Strings._mapper);
         }
         else if(r instanceof Buffer)
         {

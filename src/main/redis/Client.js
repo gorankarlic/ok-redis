@@ -15,6 +15,11 @@ const RespWriter = require("./RespWriter");
  */
 class Client
 {
+    /**
+     * Creates a new instance of this class.
+     *
+     * @param {Object} opts the connection options.
+     */
     constructor(opts)
     {
         this.opts = opts;
