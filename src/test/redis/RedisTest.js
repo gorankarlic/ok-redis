@@ -27,4 +27,12 @@ describe("Redis", async function()
             });
         });
     });
+
+    it("echo as string (async)", async function()
+    {
+        const client = await Redis.connect();
+        const echo = await client.strings().echo("Test");
+        assert.strictEqual(echo, "Test");
+        await client.quit();
+    });
 });

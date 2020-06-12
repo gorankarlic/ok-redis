@@ -7,7 +7,7 @@ const RedisLoadingError = require("../../main/redis/RedisLoadingError");
 const RedisMovedError = require("../../main/redis/RedisMovedError");
 const RedisTryAgainError = require("../../main/redis/RedisTryAgainError");
 const RespBuffer = require("../../main/redis/RespBuffer");
-const RespReader = require("../../main/redis/RespReader");
+const {RespReader} = require("../../main/redis/RespReader");
 
 describe("RespReader", function()
 {

@@ -5,82 +5,179 @@ const RedisClient = require("../../main/redis/RedisClient");
 
 describe("RedisClient", function()
 {
-    describe("constructor", function()
+    describe("connect", function()
     {
         it("should connect and quit", function(done)
         {
-            const client = new RedisClient(6379);
-            client.connect((error) =>
+            const opts =
             {
-                assert.strictEqual(error, null);
+                port: 6379,
+                returns: Buffer
+            };
+            const client = new RedisClient(opts);
+            client.connect((err) =>
+            {
+                assert.strictEqual(err, null);
                 client.quit(done);
             });
         });
-    });
-    
-    /*describe("batch", function()
-    {
-        it("should connect, do batch command and quit", function(done)
+
+        it("should not reconnect if no connected once", function(done)
         {
-            const client = new RedisClient(6379);
-            client.connect(() =>
+            const opts =
             {
-                const batch = client.batch();
-                batch.echo("test", () =>
-                {
-                    client.quit(done);
-                });
+                port: 6380,
+                returns: Buffer
+            };
+            const client = new RedisClient(opts);
+            client.connect((err) =>
+            {
+                assert.match(String(err), /^Error: connect ECONNREFUSED/);
+                done();
             });
         });
-    });*/
-    
-    /*beforeEach(function(done)
-    {
-        client = new RedisClient(6379);
-        client.connect(done);
-    });
 
-    afterEach(function(done)
-    {
-        client.quit(done);
-    });
-
-    describe("constructor", function()
-    {
-        it("should connect", function(done)
+        it("should reconnect if connected once", function(done)
         {
-            client.flushdb((err, result) =>
+            const opts =
+            {
+                port: 6379,
+                returns: Buffer
+            };
+            let ponged = false;
+            const client = new RedisClient(opts);
+            client.ping((err, result) =>
             {
                 assert.strictEqual(err, null);
-                assert.strictEqual(result, "OK");
-                client.set("foo", "bar", (err, result) =>
+                assert.strictEqual(result, "PONG");
+                ponged = true;
+            });
+            client.connect((err) =>
+            {
+                assert.strictEqual(err, null);
+                client.client("ID", (err, result) =>
                 {
                     assert.strictEqual(err, null);
-                    assert.strictEqual(result, "OK");
-                    client.get("foo", (err, result) =>
+                    assert.strictEqual(ponged, true);
+                    client.client("KILL", "ID", result, "SKIPME", "NO", (err, result) =>
                     {
                         assert.strictEqual(err, null);
-                        assert.deepStrictEqual(result, Buffer.from("bar"));
-                        done();
+                        assert.strictEqual(result, 1);
+                        const ping = () => client.ping((err, result) =>
+                        {
+                            assert.strictEqual(err, null);
+                            assert.strictEqual(result, "PONG");
+                            client.quit(done);
+                        });
+                        setTimeout(ping, 500);
                     });
                 });
             });
         });
     });
 
-    describe("MULTI", function()
+    describe("option to return buffers or strings", function()
     {
-        it("should be able to use MULTI", function(done)
+        it("should return buffer", function(done)
+        {
+            const opts =
+            {
+                port: 6379,
+                returns: Buffer
+            };
+            const client = new RedisClient(opts);
+            client.connect((err) =>
+            {
+                assert.strictEqual(err, null);
+                client.echo("test", (err, result) =>
+                {
+                    assert.strictEqual(err, null);
+                    assert.deepStrictEqual(result, Buffer.from("test"));
+                    client.quit(done);
+                });
+            });
+        });
+
+        it("should return string", function(done)
+        {
+            const opts =
+            {
+                port: 6379,
+                returns: String
+            };
+            const client = new RedisClient(opts);
+            client.connect((err) =>
+            {
+                assert.strictEqual(err, null);
+                client.echo("test", (err, result) =>
+                {
+                    assert.strictEqual(err, null);
+                    assert.strictEqual(result, "test");
+                    client.quit(done);
+                });
+            });
+        });
+    });
+
+    describe("commands", function()
+    {
+        let client;
+
+        beforeEach(function(done)
+        {
+            const opts =
+            {
+                port: 6379,
+                returns: Buffer
+            };
+            client = new RedisClient(opts);
+            client.connect(done);
+        });
+
+        afterEach(function(done)
+        {
+            client.quit(done);
+        });
+
+        it("should get and set", function(done)
+        {
+            client.set("foo", "bar", (err, result) =>
+            {
+                assert.strictEqual(err, null);
+                assert.strictEqual(result, "OK");
+                client.get("foo", (err, result) =>
+                {
+                    assert.strictEqual(err, null);
+                    assert.deepStrictEqual(result, Buffer.from("bar"));
+                    done();
+                });
+            });
+        });
+
+        it("should use MULTI", function(done)
         {
             const multi = client.multi();
             multi.set("a", "b");
             multi.exec(done);
         });
-    });
 
-    describe("Pipeline", function()
-    {
-        it("should be able to use pipeline", function(done)
+        it("should use batch", function(done)
+        {
+            const batch = client.batch();
+            batch.echo("test", (err, result) =>
+            {
+                assert.strictEqual(err, null);
+                assert.deepStrictEqual(result, Buffer.from("test"));
+            });
+            batch.exec((err, result) =>
+            {
+                assert.strictEqual(err, null);
+                assert.strictEqual(result, "PONG");
+                done();
+            });
+        });
+
+        it("should use pipeline", function(done)
         {
             const batch = client.pipeline();
             batch.ping();
@@ -91,5 +188,5 @@ describe("RedisClient", function()
                 done();
             });
         });
-    });*/
+    });
 });
