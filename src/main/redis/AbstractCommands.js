@@ -6801,6 +6801,468 @@ class AbstractCommands
     }
 
     /**
+     * XACK key group ID [ID ...]
+     *
+     * (write, random, fast, 1, 1, 1)
+     * (arity -4, first key NaN, last key NaN)
+     *
+     * Marks a pending message as correctly processed, effectively removing it from the pending entries list of the consumer group. Return value of the command is the number of messages successfully acknowledged, that is, the IDs we were actually able to resolve in the PEL.
+     *
+     * @see http://redis.io/commands/xack
+     * @since 5.0.0
+     */
+    xack()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            case 1:
+            case 2:
+            {
+                throw new Error("XACK: wrong number of arguments");
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x20000;
+                args[1] = "XACK";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
+     * XADD key ID field value [field value ...]
+     *
+     * (write, denyoom, random, fast, 1, 1, 1)
+     * (arity -5, first key NaN, last key NaN)
+     *
+     * Appends a new entry to a stream.
+     *
+     * @see http://redis.io/commands/xadd
+     * @since 5.0.0
+     */
+    xadd()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            {
+                throw new Error("XADD: wrong number of arguments");
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x20000;
+                args[1] = "XADD";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
+     * XCLAIM key group consumer min-idle-time ID [ID ...] [IDLE ms] [TIME ms-unix-time] [RETRYCOUNT count] [force] [justid]
+     *
+     * (write, random, fast, 1, 1, 1)
+     * (arity -6, first key NaN, last key NaN)
+     *
+     * Changes (or acquires) ownership of a message in a consumer group, as if the message was delivered to the specified consumer.
+     *
+     * @see http://redis.io/commands/xclaim
+     * @since 5.0.0
+     */
+    xclaim()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            {
+                throw new Error("XCLAIM: wrong number of arguments");
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x20000;
+                args[1] = "XCLAIM";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
+     * XDEL key ID [ID ...]
+     *
+     * (write, fast, 1, 1, 1)
+     * (arity -3, first key NaN, last key NaN)
+     *
+     * Removes the specified entries from the stream. Returns the number of items actually deleted, that may be different from the number of IDs passed in case certain IDs do not exist.
+     *
+     * @see http://redis.io/commands/xdel
+     * @since 5.0.0
+     */
+    xdel()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            case 1:
+            {
+                throw new Error("XDEL: wrong number of arguments");
+            }
+            case 2:
+            {
+                args = [0x20000, "XDEL", arguments[0], arguments[1]];
+                break;
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x20000;
+                args[1] = "XDEL";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
+     * XGROUP [CREATE key groupname id-or-$] [SETID key groupname id-or-$] [DESTROY key groupname] [DELCONSUMER key groupname consumername]
+     *
+     * (write, denyoom, 2, 2, 1)
+     * (arity -2, first key NaN, last key NaN)
+     *
+     * Create, destroy, and manage consumer groups.
+     *
+     * @see http://redis.io/commands/xgroup
+     * @since 5.0.0
+     */
+    xgroup()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            {
+                throw new Error("XGROUP: wrong number of arguments");
+            }
+            case 1:
+            {
+                args = [0x20000, "XGROUP", arguments[0]];
+                break;
+            }
+            case 2:
+            {
+                args = [0x20000, "XGROUP", arguments[0], arguments[1]];
+                break;
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x20000;
+                args[1] = "XGROUP";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
+     * XINFO [CONSUMERS key groupname] [GROUPS key] [STREAM key] [HELP]
+     *
+     * (readonly, random, 2, 2, 1)
+     * (arity -2, first key NaN, last key NaN)
+     *
+     * Get information on streams and consumer groups.
+     *
+     * @see http://redis.io/commands/xinfo
+     * @since 5.0.0
+     */
+    xinfo()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            {
+                throw new Error("XINFO: wrong number of arguments");
+            }
+            case 1:
+            {
+                args = [0x10000, "XINFO", arguments[0]];
+                break;
+            }
+            case 2:
+            {
+                args = [0x10000, "XINFO", arguments[0], arguments[1]];
+                break;
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x10000;
+                args[1] = "XINFO";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
+     * XLEN key
+     *
+     * (readonly, fast, 1, 1, 1)
+     * (arity 2, first key NaN, last key NaN)
+     *
+     * Return the number of entires in a stream.
+     *
+     * @param {Object} arg0 the first argument.
+     * @param {Function} callback the function to call when done.
+     * @see http://redis.io/commands/xlen
+     * @since 5.0.0
+     */
+    xlen(arg0, callback)
+    {
+        if(callback === void(0))
+        {
+            return this._cp([0x10000, "XLEN", arg0]);
+        }
+        else
+        {
+            this._cc([0x10000, "XLEN", arg0, callback]);
+        }
+    }
+
+    /**
+     * XPENDING key group [start end count] [consumer]
+     *
+     * (readonly, random, 1, 1, 1)
+     * (arity -3, first key NaN, last key NaN)
+     *
+     * Return information and entries from a stream consumer group pending entries list, that are messages fetched but never acknowledged.
+     *
+     * @see http://redis.io/commands/xpending
+     * @since 5.0.0
+     */
+    xpending()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            case 1:
+            {
+                throw new Error("XPENDING: wrong number of arguments");
+            }
+            case 2:
+            {
+                args = [0x10000, "XPENDING", arguments[0], arguments[1]];
+                break;
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x10000;
+                args[1] = "XPENDING";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
+     * XRANGE key start end [COUNT count]
+     *
+     * (readonly, 1, 1, 1)
+     * (arity -4, first key NaN, last key NaN)
+     *
+     * Return a range of elements in a stream, with IDs matching the specified IDs interval.
+     *
+     * @see http://redis.io/commands/xrange
+     * @since 5.0.0
+     */
+    xrange()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            case 1:
+            case 2:
+            {
+                throw new Error("XRANGE: wrong number of arguments");
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x10000;
+                args[1] = "XRANGE";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
+     * XREAD [COUNT count] [BLOCK milliseconds] STREAMS key [key ...] id [id ...]
+     *
+     * (readonly, movablekeys, 1, 1, 1, @read)
+     * (arity -4, first key NaN, last key NaN)
+     *
+     * Return never seen elements in multiple streams, with IDs greater than the ones reported by the caller for each stream. Can block.
+     *
+     * @see http://redis.io/commands/xread
+     * @since 5.0.0
+     */
+    xread()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            case 1:
+            case 2:
+            {
+                throw new Error("XREAD: wrong number of arguments");
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x10000;
+                args[1] = "XREAD";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
+     * XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREAMS key [key ...] ID [ID ...]
+     *
+     * (write, movablekeys, 1, 1, 1, @write)
+     * (arity -7, first key NaN, last key NaN)
+     *
+     * Return new entries from a stream using a consumer group, or access the history of the pending entries for a given consumer. Can block.
+     *
+     * @see http://redis.io/commands/xreadgroup
+     * @since 5.0.0
+     */
+    xreadgroup()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            {
+                throw new Error("XREADGROUP: wrong number of arguments");
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x20000;
+                args[1] = "XREADGROUP";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
+     * XREVRANGE key end start [COUNT count]
+     *
+     * (readonly, 1, 1, 1)
+     * (arity -4, first key NaN, last key NaN)
+     *
+     * Return a range of elements in a stream, with IDs matching the specified IDs interval, in reverse order (from greater to smaller IDs) compared to XRANGE.
+     *
+     * @see http://redis.io/commands/xrevrange
+     * @since 5.0.0
+     */
+    xrevrange()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            case 1:
+            case 2:
+            {
+                throw new Error("XREVRANGE: wrong number of arguments");
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x10000;
+                args[1] = "XREVRANGE";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
+    }
+
+    /**
      * XSETID key arg
      *
      * (write, denyoom, fast, 1, 1, 1)
@@ -6824,6 +7286,51 @@ class AbstractCommands
         {
             this._cc([0x20000, "XSETID", arg0, arg1, callback]);
         }
+    }
+
+    /**
+     * XTRIM key MAXLEN [~] count
+     *
+     * (write, random, 1, 1, 1)
+     * (arity -2, first key NaN, last key NaN)
+     *
+     * Trims the stream to (approximately if '~' is passed) a certain size.
+     *
+     * @see http://redis.io/commands/xtrim
+     * @since 5.0.0
+     */
+    xtrim()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            {
+                throw new Error("XTRIM: wrong number of arguments");
+            }
+            case 1:
+            {
+                args = [0x20000, "XTRIM", arguments[0]];
+                break;
+            }
+            case 2:
+            {
+                args = [0x20000, "XTRIM", arguments[0], arguments[1]];
+                break;
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x20000;
+                args[1] = "XTRIM";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._c(args);
     }
 
     /**

@@ -763,3 +763,42 @@ Query a sorted set representing a geospatial index to fetch members matching a g
 GEORADIUSBYMEMBER key member radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count] [ASC|DESC] [STORE key] [STOREDIST key]
 Query a sorted set representing a geospatial index to fetch members matching a given maximum distance from a member
 3.2.0
+XACK key group ID [ID ...]
+Marks a pending message as correctly processed, effectively removing it from the pending entries list of the consumer group. Return value of the command is the number of messages successfully acknowledged, that is, the IDs we were actually able to resolve in the PEL.
+5.0.0
+XADD key ID field value [field value ...]
+Appends a new entry to a stream
+5.0.0
+XCLAIM key group consumer min-idle-time ID [ID ...] [IDLE ms] [TIME ms-unix-time] [RETRYCOUNT count] [force] [justid]
+Changes (or acquires) ownership of a message in a consumer group, as if the message was delivered to the specified consumer.
+5.0.0
+XDEL key ID [ID ...]
+Removes the specified entries from the stream. Returns the number of items actually deleted, that may be different from the number of IDs passed in case certain IDs do not exist.
+5.0.0
+XGROUP [CREATE key groupname id-or-$] [SETID key groupname id-or-$] [DESTROY key groupname] [DELCONSUMER key groupname consumername]
+Create, destroy, and manage consumer groups.
+5.0.0
+XINFO [CONSUMERS key groupname] [GROUPS key] [STREAM key] [HELP]
+Get information on streams and consumer groups
+5.0.0
+XLEN key
+Return the number of entires in a stream
+5.0.0
+XPENDING key group [start end count] [consumer]
+Return information and entries from a stream consumer group pending entries list, that are messages fetched but never acknowledged.
+5.0.0
+XRANGE key start end [COUNT count]
+Return a range of elements in a stream, with IDs matching the specified IDs interval
+5.0.0
+XREAD [COUNT count] [BLOCK milliseconds] STREAMS key [key ...] id [id ...]
+Return never seen elements in multiple streams, with IDs greater than the ones reported by the caller for each stream. Can block.
+5.0.0
+XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREAMS key [key ...] ID [ID ...]
+Return new entries from a stream using a consumer group, or access the history of the pending entries for a given consumer. Can block.
+5.0.0
+XREVRANGE key end start [COUNT count]
+Return a range of elements in a stream, with IDs matching the specified IDs interval, in reverse order (from greater to smaller IDs) compared to XRANGE
+5.0.0
+XTRIM key MAXLEN [~] count
+Trims the stream to (approximately if '~' is passed) a certain size
+5.0.0

@@ -21,6 +21,7 @@ child_process.execSync("printf \"HELP @scripting\" | redis-cli >> Redis.txt", op
 child_process.execSync("printf \"HELP @hyperloglog\" | redis-cli >> Redis.txt", opts);
 child_process.execSync("printf \"HELP @cluster\" | redis-cli >> Redis.txt", opts);
 child_process.execSync("printf \"HELP @geo\" | redis-cli >> Redis.txt", opts);
+child_process.execSync("printf \"HELP @stream\" | redis-cli >> Redis.txt", opts);
 
 let out = fs.readFileSync(__dirname + "/Redis.txt", "ascii");
 out = out.replace(/  \[1m/g, "");
