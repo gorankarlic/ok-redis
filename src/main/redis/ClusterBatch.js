@@ -26,13 +26,21 @@ class ClusterBatch extends Batch
         const index = type & 0xF;
         this._queue.addLast(args);
         this._rw |= type >>> 4;
-        if(this._slot === -1 && index !== 0)
+        if(index !== 0)
         {
-            this._slot = RespWriter.slotFromArgs(args, index);
+            const slot = RespWriter.slotFromArgs(args, index);
+            if(this._slot === -1)
+            {
+                this._slot = slot;
+            }
+            else if(this._slot !== slot)
+            {
+                throw new Error("cluster batch mode supports only same slot keys");
+            }
         }
     }
 
-    exec(callback)
+    _exec(callback)
     {
         this._queue.addLast([0, "PING", callback]);
         this._client.commandPipeline(this._queue, this._slot, this._rw);

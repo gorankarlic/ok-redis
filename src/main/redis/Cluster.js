@@ -278,9 +278,9 @@ class Cluster
         {
             if(++run === runs)
             {
-                if(done !== void(null))
+                if(done !== void null)
                 {
-                    done();
+                    done(null);
                 }
             }
         };

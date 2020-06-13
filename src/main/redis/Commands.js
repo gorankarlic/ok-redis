@@ -78,25 +78,11 @@ class Strings extends Commands
      *
      * @param {Array} args the command arguments.
      */
-    _cc(args)
+    _c(args)
     {
         const callback = args.pop();
         args.push((err, result) => callback(err, Strings._mapper(result)));
         this._client.command(args);
-    }
-
-    /**
-     * Runs the the specified command arguments with a promise.
-     *
-     * @param {Array} args the command arguments.
-     */
-    _cp(args)
-    {
-        return new Promise((resolve, reject) =>
-        {
-            args.push((err, result) => err === null ? resolve(Strings._mapper(result)) : reject(err));
-            this._client.command(args);
-        });
     }
 
     /**

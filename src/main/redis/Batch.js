@@ -25,11 +25,23 @@ class Batch extends Commands
         this._queue.addLast(args);
     };
 
-    exec(callback)
+    _exec(callback)
     {
         this._queue.addLast([0, "PING", callback]);
         this._client.commandPipeline(this._queue);
         this._queue = null;
+    }
+
+    exec(callback)
+    {
+        if(callback === void null)
+        {
+            return new Promise((resolve, reject) => this._exec((err, result) => err === null ? resolve(result) : reject(err)));
+        }
+        else
+        {
+            this._exec(callback);
+        }
     }
 }
 

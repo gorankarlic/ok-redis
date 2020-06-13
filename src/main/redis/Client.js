@@ -33,7 +33,7 @@ class Client
         this.writer = new RespWriter();
 
         this.socket = new net.Socket();
-        this.socket.on("connect", this.onconnect.bind(this))
+        this.socket.on("connect", this.onconnect.bind(this));
         this.socket.on("close", this.onclose.bind(this));
         this.socket.on("data", this.ondata.bind(this));
         this.socket.on("drain", this.ondrain.bind(this));

@@ -22,23 +22,6 @@ class AbstractCommands
      */
     _c(args)
     {
-        if(args[args.length - 1] instanceof Function)
-        {
-            return this._cc(args);
-        }
-        else
-        {
-            return this._cp(args);
-        }
-    }
-
-    /**
-     * Runs the the specified command arguments with a callback.
-     *
-     * @param {Array} args the command arguments.
-     */
-    _cc(args)
-    {
         this._client.command(args);
     }
 
@@ -47,13 +30,30 @@ class AbstractCommands
      *
      * @param {Array} args the command arguments.
      */
-    _cp(args)
+    _p(args)
     {
         return new Promise((resolve, reject) =>
         {
             args.push((err, result) => err === null ? resolve(result) : reject(err));
-            this._client.command(args);
+            this._c(args);
         });
+    }
+
+    /**
+     * Runs the the specified command arguments with a promise or callback.
+     *
+     * @param {Array} args the command arguments.
+     */
+    _r(args)
+    {
+        if(args[args.length - 1] instanceof Function)
+        {
+            return this._c(args);
+        }
+        else
+        {
+            return this._p(args);
+        }
     }/*[GENERATED]*/
 }
 

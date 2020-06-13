@@ -22,23 +22,6 @@ class AbstractCommands
      */
     _c(args)
     {
-        if(args[args.length - 1] instanceof Function)
-        {
-            return this._cc(args);
-        }
-        else
-        {
-            return this._cp(args);
-        }
-    }
-
-    /**
-     * Runs the the specified command arguments with a callback.
-     *
-     * @param {Array} args the command arguments.
-     */
-    _cc(args)
-    {
         this._client.command(args);
     }
 
@@ -47,20 +30,37 @@ class AbstractCommands
      *
      * @param {Array} args the command arguments.
      */
-    _cp(args)
+    _p(args)
     {
         return new Promise((resolve, reject) =>
         {
             args.push((err, result) => err === null ? resolve(result) : reject(err));
-            this._client.command(args);
+            this._c(args);
         });
+    }
+
+    /**
+     * Runs the the specified command arguments with a promise or callback.
+     *
+     * @param {Array} args the command arguments.
+     */
+    _r(args)
+    {
+        if(args[args.length - 1] instanceof Function)
+        {
+            return this._c(args);
+        }
+        else
+        {
+            return this._p(args);
+        }
     }
 
     /**
      * ACL CAT [categoryname]
      *
-     * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
      *
      * List the ACL categories or the commands inside a category.
      *
@@ -71,8 +71,8 @@ class AbstractCommands
      *
      * ACL DELUSER username [username ...]
      *
-     * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
      *
      * Remove the specified ACL users and the associated rules.
      *
@@ -83,8 +83,8 @@ class AbstractCommands
      *
      * ACL GENPASS [bits]
      *
-     * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
      *
      * Generate a pseudorandom secure password to use for ACL users.
      *
@@ -95,8 +95,8 @@ class AbstractCommands
      *
      * ACL LIST -
      *
-     * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
      *
      * List the current ACL rules in ACL config file format.
      *
@@ -107,8 +107,8 @@ class AbstractCommands
      *
      * ACL LOAD -
      *
-     * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
      *
      * Reload the ACLs from the configured ACL file.
      *
@@ -119,8 +119,8 @@ class AbstractCommands
      *
      * ACL LOG [count or RESET]
      *
-     * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
      *
      * List latest events denied because of ACLs in place.
      *
@@ -131,8 +131,8 @@ class AbstractCommands
      *
      * ACL SAVE -
      *
-     * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
      *
      * Save the current ACL rules in the configured ACL file.
      *
@@ -143,8 +143,8 @@ class AbstractCommands
      *
      * ACL SETUSER rule [rule ...]
      *
-     * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
      *
      * Modify or create the rules for a specific ACL user.
      *
@@ -155,8 +155,8 @@ class AbstractCommands
      *
      * ACL USERS -
      *
-     * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
      *
      * List the username of all the configured ACL rules.
      *
@@ -167,8 +167,8 @@ class AbstractCommands
      *
      * ACL WHOAMI -
      *
-     * (admin, noscript, loading, stale, skip_slowlog, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
      *
      * Return the name of the user associated to the current connection.
      *
@@ -206,14 +206,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * APPEND key value
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Append a value to a key.
      *
@@ -225,21 +225,21 @@ class AbstractCommands
      */
     append(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "APPEND", arg0, arg1]);
+            return this._p([0x20001, "APPEND", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "APPEND", arg0, arg1, callback]);
+            this._c([0x20001, "APPEND", arg0, arg1, callback]);
         }
     }
 
     /**
      * ASKING 
      *
-     * (fast, 0, 0)
-     * (arity 1, first key 0, last key NaN)
+     * (fast)
+     * (arity 1, first key 0, last key 0)
      *
      * Help not available.
      *
@@ -249,21 +249,21 @@ class AbstractCommands
      */
     asking(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "ASKING"]);
+            return this._p([0x0, "ASKING"]);
         }
         else
         {
-            this._cc([0x0, "ASKING", callback]);
+            this._c([0x0, "ASKING", callback]);
         }
     }
 
     /**
      * AUTH password
      *
-     * (noscript, loading, stale, skip_monitor, skip_slowlog, fast, no_auth, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (noscript, loading, stale, skip_monitor, skip_slowlog, fast, no_auth)
+     * (arity -2, first key 0, last key 0)
      *
      * Authenticate to the server.
      *
@@ -301,14 +301,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BGREWRITEAOF -
      *
-     * (admin, noscript, 0, 0, 0)
-     * (arity 1, first key NaN, last key NaN)
+     * (admin, noscript)
+     * (arity 1, first key 0, last key 0)
      *
      * Asynchronously rewrite the append-only file.
      *
@@ -318,21 +318,21 @@ class AbstractCommands
      */
     bgrewriteaof(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "BGREWRITEAOF"]);
+            return this._p([0x0, "BGREWRITEAOF"]);
         }
         else
         {
-            this._cc([0x0, "BGREWRITEAOF", callback]);
+            this._c([0x0, "BGREWRITEAOF", callback]);
         }
     }
 
     /**
      * BGSAVE [SCHEDULE]
      *
-     * (admin, noscript, 0, 0, 0)
-     * (arity -1, first key NaN, last key NaN)
+     * (admin, noscript)
+     * (arity -1, first key 0, last key 0)
      *
      * Asynchronously save the dataset to disk.
      *
@@ -371,14 +371,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BITCOUNT key [start end]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -2, first key 1, last key 1)
      *
      * Count set bits in a string.
      *
@@ -397,18 +397,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "BITCOUNT", arguments[0]];
+                args = [0x10001, "BITCOUNT", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "BITCOUNT", arguments[0], arguments[1]];
+                args = [0x10001, "BITCOUNT", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "BITCOUNT";
                 for(let n = 0; n < len; n++)
                 {
@@ -416,14 +416,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BITFIELD key [GET type offset] [SET type offset value] [INCRBY type offset increment] [OVERFLOW WRAP|SAT|FAIL]
      *
-     * (write, denyoom, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -2, first key 1, last key 1)
      *
      * Perform arbitrary bitfield integer operations on strings.
      *
@@ -442,18 +442,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "BITFIELD", arguments[0]];
+                args = [0x20001, "BITFIELD", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "BITFIELD", arguments[0], arguments[1]];
+                args = [0x20001, "BITFIELD", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "BITFIELD";
                 for(let n = 0; n < len; n++)
                 {
@@ -461,14 +461,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BITFIELD_RO key ...options...
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity -2, first key 1, last key 1)
      *
      * Help not available.
      *
@@ -487,18 +487,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "BITFIELD_RO", arguments[0]];
+                args = [0x10001, "BITFIELD_RO", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "BITFIELD_RO", arguments[0], arguments[1]];
+                args = [0x10001, "BITFIELD_RO", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "BITFIELD_RO";
                 for(let n = 0; n < len; n++)
                 {
@@ -506,14 +506,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BITOP operation destkey key [key ...]
      *
-     * (write, denyoom, 2, -1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -4, first key 2, last key -1)
      *
      * Perform bitwise operations between strings.
      *
@@ -535,7 +535,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20002;
                 args[1] = "BITOP";
                 for(let n = 0; n < len; n++)
                 {
@@ -543,14 +543,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BITPOS key bit [start] [end]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -3, first key 1, last key 1)
      *
      * Find first bit set or clear in a string.
      *
@@ -570,13 +570,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x10000, "BITPOS", arguments[0], arguments[1]];
+                args = [0x10001, "BITPOS", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "BITPOS";
                 for(let n = 0; n < len; n++)
                 {
@@ -584,14 +584,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BLPOP key [key ...] timeout
      *
-     * (write, noscript, 1, -2, 1, @write)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, noscript)
+     * (arity -3, first key 1, last key -2)
      *
      * Remove and get the first element in a list, or block until one is available.
      *
@@ -611,13 +611,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "BLPOP", arguments[0], arguments[1]];
+                args = [0x20001, "BLPOP", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "BLPOP";
                 for(let n = 0; n < len; n++)
                 {
@@ -625,14 +625,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BRPOP key [key ...] timeout
      *
-     * (write, noscript, 1, -2, 1, @write)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, noscript)
+     * (arity -3, first key 1, last key -2)
      *
      * Remove and get the last element in a list, or block until one is available.
      *
@@ -652,13 +652,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "BRPOP", arguments[0], arguments[1]];
+                args = [0x20001, "BRPOP", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "BRPOP";
                 for(let n = 0; n < len; n++)
                 {
@@ -666,14 +666,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BRPOPLPUSH source destination timeout
      *
-     * (write, denyoom, noscript, 1, 2, 1, @write)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, denyoom, noscript)
+     * (arity 4, first key 1, last key 2)
      *
      * Pop an element from a list, push it to another list and return it; or block until one is available.
      *
@@ -695,7 +695,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "BRPOPLPUSH";
                 for(let n = 0; n < len; n++)
                 {
@@ -703,14 +703,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BZPOPMAX key [key ...] timeout
      *
-     * (write, noscript, fast, 1, -2, 1, @write)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, noscript, fast)
+     * (arity -3, first key 1, last key -2)
      *
      * Remove and return the member with the highest score from one or more sorted sets, or block until one is available.
      *
@@ -730,13 +730,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "BZPOPMAX", arguments[0], arguments[1]];
+                args = [0x20001, "BZPOPMAX", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "BZPOPMAX";
                 for(let n = 0; n < len; n++)
                 {
@@ -744,14 +744,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * BZPOPMIN key [key ...] timeout
      *
-     * (write, noscript, fast, 1, -2, 1, @write)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, noscript, fast)
+     * (arity -3, first key 1, last key -2)
      *
      * Remove and return the member with the lowest score from one or more sorted sets, or block until one is available.
      *
@@ -771,13 +771,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "BZPOPMIN", arguments[0], arguments[1]];
+                args = [0x20001, "BZPOPMIN", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "BZPOPMIN";
                 for(let n = 0; n < len; n++)
                 {
@@ -785,14 +785,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * CLIENT CACHING YES|NO
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Instruct the server about tracking or not keys in the next request.
      *
@@ -803,8 +803,8 @@ class AbstractCommands
      *
      * CLIENT GETNAME -
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Get the current connection name.
      *
@@ -815,8 +815,8 @@ class AbstractCommands
      *
      * CLIENT GETREDIR -
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Get tracking notifications redirection client ID if any.
      *
@@ -827,8 +827,8 @@ class AbstractCommands
      *
      * CLIENT ID -
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Returns the client ID for the current connection.
      *
@@ -839,8 +839,8 @@ class AbstractCommands
      *
      * CLIENT KILL [ip:port] [ID client-id] [TYPE normal|master|slave|pubsub] [ADDR ip:port] [SKIPME yes/no]
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Kill the connection of a client.
      *
@@ -851,8 +851,8 @@ class AbstractCommands
      *
      * CLIENT LIST [TYPE normal|master|replica|pubsub]
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Get the list of client connections.
      *
@@ -863,8 +863,8 @@ class AbstractCommands
      *
      * CLIENT PAUSE timeout
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Stop processing commands from clients for some time.
      *
@@ -875,8 +875,8 @@ class AbstractCommands
      *
      * CLIENT REPLY ON|OFF|SKIP
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Instruct the server whether to reply to commands.
      *
@@ -887,8 +887,8 @@ class AbstractCommands
      *
      * CLIENT SETNAME connection-name
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Set the current connection name.
      *
@@ -899,8 +899,8 @@ class AbstractCommands
      *
      * CLIENT TRACKING ON|OFF [REDIRECT client-id] [PREFIX prefix] [BCAST] [OPTIN] [OPTOUT] [NOLOOP]
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Enable or disable server assisted client side caching support.
      *
@@ -911,8 +911,8 @@ class AbstractCommands
      *
      * CLIENT UNBLOCK client-id [TIMEOUT|ERROR]
      *
-     * (admin, noscript, random, loading, stale, 0, 0, 0, @admin)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Unblock a client blocked in a blocking command from a different connection.
      *
@@ -950,14 +950,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * CLUSTER ADDSLOTS slot [slot ...]
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Assign new hash slots to receiving node.
      *
@@ -968,8 +968,8 @@ class AbstractCommands
      *
      * CLUSTER BUMPEPOCH -
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Advance the cluster config epoch.
      *
@@ -980,8 +980,8 @@ class AbstractCommands
      *
      * CLUSTER COUNT-FAILURE-REPORTS node-id
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Return the number of failure reports active for a given node.
      *
@@ -992,8 +992,8 @@ class AbstractCommands
      *
      * CLUSTER COUNTKEYSINSLOT slot
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Return the number of local keys in the specified hash slot.
      *
@@ -1004,8 +1004,8 @@ class AbstractCommands
      *
      * CLUSTER DELSLOTS slot [slot ...]
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Set hash slots as unbound in receiving node.
      *
@@ -1016,8 +1016,8 @@ class AbstractCommands
      *
      * CLUSTER FAILOVER [FORCE|TAKEOVER]
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Forces a replica to perform a manual failover of its master.
      *
@@ -1028,8 +1028,8 @@ class AbstractCommands
      *
      * CLUSTER FLUSHSLOTS -
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Delete a node's own slots information.
      *
@@ -1040,8 +1040,8 @@ class AbstractCommands
      *
      * CLUSTER FORGET node-id
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Remove a node from the nodes table.
      *
@@ -1052,8 +1052,8 @@ class AbstractCommands
      *
      * CLUSTER GETKEYSINSLOT slot count
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Return local key names in the specified hash slot.
      *
@@ -1064,8 +1064,8 @@ class AbstractCommands
      *
      * CLUSTER INFO -
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Provides info about Redis Cluster node state.
      *
@@ -1076,8 +1076,8 @@ class AbstractCommands
      *
      * CLUSTER KEYSLOT key
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Returns the hash slot of the specified key.
      *
@@ -1088,8 +1088,8 @@ class AbstractCommands
      *
      * CLUSTER MEET ip port
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Force a node cluster to handshake with another node.
      *
@@ -1100,8 +1100,8 @@ class AbstractCommands
      *
      * CLUSTER MYID -
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Return the node id.
      *
@@ -1112,8 +1112,8 @@ class AbstractCommands
      *
      * CLUSTER NODES -
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Get Cluster config for the node.
      *
@@ -1124,8 +1124,8 @@ class AbstractCommands
      *
      * CLUSTER REPLICAS node-id
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * List replica nodes of the specified master node.
      *
@@ -1136,8 +1136,8 @@ class AbstractCommands
      *
      * CLUSTER REPLICATE node-id
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Reconfigure a node as a replica of the specified master node.
      *
@@ -1148,8 +1148,8 @@ class AbstractCommands
      *
      * CLUSTER RESET [HARD|SOFT]
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Reset a Redis Cluster node.
      *
@@ -1160,8 +1160,8 @@ class AbstractCommands
      *
      * CLUSTER SAVECONFIG -
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Forces the node to save cluster state on disk.
      *
@@ -1172,8 +1172,8 @@ class AbstractCommands
      *
      * CLUSTER SET-CONFIG-EPOCH config-epoch
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Set the configuration epoch in a new node.
      *
@@ -1184,8 +1184,8 @@ class AbstractCommands
      *
      * CLUSTER SETSLOT slot IMPORTING|MIGRATING|STABLE|NODE [node-id]
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Bind a hash slot to a specific node.
      *
@@ -1196,8 +1196,8 @@ class AbstractCommands
      *
      * CLUSTER SLAVES node-id
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * List replica nodes of the specified master node.
      *
@@ -1208,8 +1208,8 @@ class AbstractCommands
      *
      * CLUSTER SLOTS -
      *
-     * (admin, random, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Get array of Cluster slot to node mappings.
      *
@@ -1247,14 +1247,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * COMMAND -
      *
-     * (random, loading, stale, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (random, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Get array of Redis command details.
      *
@@ -1265,8 +1265,8 @@ class AbstractCommands
      *
      * COMMAND COUNT -
      *
-     * (random, loading, stale, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (random, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Get total number of Redis commands.
      *
@@ -1277,8 +1277,8 @@ class AbstractCommands
      *
      * COMMAND GETKEYS -
      *
-     * (random, loading, stale, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (random, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Extract keys given a full Redis command.
      *
@@ -1289,8 +1289,8 @@ class AbstractCommands
      *
      * COMMAND INFO command-name [command-name ...]
      *
-     * (random, loading, stale, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (random, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Get array of specific Redis command details.
      *
@@ -1329,14 +1329,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * CONFIG GET parameter
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Get the value of a configuration parameter.
      *
@@ -1347,8 +1347,8 @@ class AbstractCommands
      *
      * CONFIG RESETSTAT -
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Reset the stats returned by INFO.
      *
@@ -1359,8 +1359,8 @@ class AbstractCommands
      *
      * CONFIG REWRITE -
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Rewrite the configuration file with the in memory configuration.
      *
@@ -1371,8 +1371,8 @@ class AbstractCommands
      *
      * CONFIG SET parameter value
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Set a configuration parameter to the given value.
      *
@@ -1410,14 +1410,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * DBSIZE -
      *
-     * (readonly, fast, 0, 0, 0)
-     * (arity 1, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 1, first key 0, last key 0)
      *
      * Return the number of keys in the selected database.
      *
@@ -1427,21 +1427,21 @@ class AbstractCommands
      */
     dbsize(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "DBSIZE"]);
+            return this._p([0x10000, "DBSIZE"]);
         }
         else
         {
-            this._cc([0x10000, "DBSIZE", callback]);
+            this._c([0x10000, "DBSIZE", callback]);
         }
     }
 
     /**
      * DEBUG OBJECT key
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Get debugging information about a key.
      *
@@ -1452,8 +1452,8 @@ class AbstractCommands
      *
      * DEBUG SEGFAULT -
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Make the server crash.
      *
@@ -1491,14 +1491,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * DECR key
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Decrement the integer value of a key by one.
      *
@@ -1509,21 +1509,21 @@ class AbstractCommands
      */
     decr(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "DECR", arg0]);
+            return this._p([0x20001, "DECR", arg0]);
         }
         else
         {
-            this._cc([0x20000, "DECR", arg0, callback]);
+            this._c([0x20001, "DECR", arg0, callback]);
         }
     }
 
     /**
      * DECRBY key decrement
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Decrement the integer value of a key by the given number.
      *
@@ -1535,21 +1535,21 @@ class AbstractCommands
      */
     decrby(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "DECRBY", arg0, arg1]);
+            return this._p([0x20001, "DECRBY", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "DECRBY", arg0, arg1, callback]);
+            this._c([0x20001, "DECRBY", arg0, arg1, callback]);
         }
     }
 
     /**
      * DEL key [key ...]
      *
-     * (write, 1, -1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (write)
+     * (arity -2, first key 1, last key -1)
      *
      * Delete a key.
      *
@@ -1568,18 +1568,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "DEL", arguments[0]];
+                args = [0x20001, "DEL", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "DEL", arguments[0], arguments[1]];
+                args = [0x20001, "DEL", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "DEL";
                 for(let n = 0; n < len; n++)
                 {
@@ -1587,14 +1587,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * DISCARD -
      *
-     * (noscript, loading, stale, fast, 0, 0)
-     * (arity 1, first key 0, last key NaN)
+     * (noscript, loading, stale, fast)
+     * (arity 1, first key 0, last key 0)
      *
      * Discard all commands issued after MULTI.
      *
@@ -1604,21 +1604,21 @@ class AbstractCommands
      */
     discard(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "DISCARD"]);
+            return this._p([0x0, "DISCARD"]);
         }
         else
         {
-            this._cc([0x0, "DISCARD", callback]);
+            this._c([0x0, "DISCARD", callback]);
         }
     }
 
     /**
      * DUMP key
      *
-     * (readonly, random, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity 2, first key 1, last key 1)
      *
      * Return a serialized version of the value stored at the specified key.
      *
@@ -1629,21 +1629,21 @@ class AbstractCommands
      */
     dump(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "DUMP", arg0]);
+            return this._p([0x10001, "DUMP", arg0]);
         }
         else
         {
-            this._cc([0x10000, "DUMP", arg0, callback]);
+            this._c([0x10001, "DUMP", arg0, callback]);
         }
     }
 
     /**
      * ECHO message
      *
-     * (readonly, fast, 0, 0, 0)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 2, first key 0, last key 0)
      *
      * Echo the given string.
      *
@@ -1654,21 +1654,21 @@ class AbstractCommands
      */
     echo(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "ECHO", arg0]);
+            return this._p([0x10000, "ECHO", arg0]);
         }
         else
         {
-            this._cc([0x10000, "ECHO", arg0, callback]);
+            this._c([0x10000, "ECHO", arg0, callback]);
         }
     }
 
     /**
      * EVAL script numkeys key [key ...] arg [arg ...]
      *
-     * (noscript, movablekeys, 0, 0)
-     * (arity -3, first key 0, last key NaN)
+     * (noscript, movablekeys)
+     * (arity -3, first key 0, last key 0)
      *
      * Execute a Lua script server side.
      *
@@ -1702,14 +1702,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * EVALSHA sha1 numkeys key [key ...] arg [arg ...]
      *
-     * (noscript, movablekeys, 0, 0)
-     * (arity -3, first key 0, last key NaN)
+     * (noscript, movablekeys)
+     * (arity -3, first key 0, last key 0)
      *
      * Execute a Lua script server side.
      *
@@ -1743,14 +1743,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * EXEC -
      *
-     * (noscript, loading, stale, skip_monitor, skip_slowlog, 0, 0)
-     * (arity 1, first key 0, last key NaN)
+     * (noscript, loading, stale, skip_monitor, skip_slowlog)
+     * (arity 1, first key 0, last key 0)
      *
      * Execute all commands issued after MULTI.
      *
@@ -1760,21 +1760,21 @@ class AbstractCommands
      */
     exec(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "EXEC"]);
+            return this._p([0x0, "EXEC"]);
         }
         else
         {
-            this._cc([0x0, "EXEC", callback]);
+            this._c([0x0, "EXEC", callback]);
         }
     }
 
     /**
      * EXISTS key [key ...]
      *
-     * (readonly, fast, 1, -1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity -2, first key 1, last key -1)
      *
      * Determine if a key exists.
      *
@@ -1793,18 +1793,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "EXISTS", arguments[0]];
+                args = [0x10001, "EXISTS", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "EXISTS", arguments[0], arguments[1]];
+                args = [0x10001, "EXISTS", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "EXISTS";
                 for(let n = 0; n < len; n++)
                 {
@@ -1812,14 +1812,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * EXPIRE key seconds
      *
-     * (write, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Set a key's time to live in seconds.
      *
@@ -1831,21 +1831,21 @@ class AbstractCommands
      */
     expire(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "EXPIRE", arg0, arg1]);
+            return this._p([0x20001, "EXPIRE", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "EXPIRE", arg0, arg1, callback]);
+            this._c([0x20001, "EXPIRE", arg0, arg1, callback]);
         }
     }
 
     /**
      * EXPIREAT key timestamp
      *
-     * (write, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Set the expiration for a key as a UNIX timestamp.
      *
@@ -1857,21 +1857,21 @@ class AbstractCommands
      */
     expireat(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "EXPIREAT", arg0, arg1]);
+            return this._p([0x20001, "EXPIREAT", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "EXPIREAT", arg0, arg1, callback]);
+            this._c([0x20001, "EXPIREAT", arg0, arg1, callback]);
         }
     }
 
     /**
      * FLUSHALL [ASYNC]
      *
-     * (write, 0, 0, 0, @keyspace)
-     * (arity -1, first key NaN, last key NaN)
+     * (write)
+     * (arity -1, first key 0, last key 0)
      *
      * Remove all keys from all databases.
      *
@@ -1910,14 +1910,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * FLUSHDB [ASYNC]
      *
-     * (write, 0, 0, 0, @keyspace)
-     * (arity -1, first key NaN, last key NaN)
+     * (write)
+     * (arity -1, first key 0, last key 0)
      *
      * Remove all keys from the current database.
      *
@@ -1956,14 +1956,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * GEOADD key longitude latitude member [longitude latitude member ...]
      *
-     * (write, denyoom, 1, 1, 1)
-     * (arity -5, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -5, first key 1, last key 1)
      *
      * Add one or more geospatial items in the geospatial index represented using a sorted set.
      *
@@ -1986,7 +1986,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "GEOADD";
                 for(let n = 0; n < len; n++)
                 {
@@ -1994,14 +1994,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * GEODIST key member1 member2 [m|km|ft|mi]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -4, first key 1, last key 1)
      *
      * Returns the distance between two members of a geospatial index.
      *
@@ -2023,7 +2023,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "GEODIST";
                 for(let n = 0; n < len; n++)
                 {
@@ -2031,14 +2031,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * GEOHASH key member [member ...]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -2, first key 1, last key 1)
      *
      * Returns members of a geospatial index as standard geohash strings.
      *
@@ -2057,18 +2057,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "GEOHASH", arguments[0]];
+                args = [0x10001, "GEOHASH", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "GEOHASH", arguments[0], arguments[1]];
+                args = [0x10001, "GEOHASH", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "GEOHASH";
                 for(let n = 0; n < len; n++)
                 {
@@ -2076,14 +2076,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * GEOPOS key member [member ...]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -2, first key 1, last key 1)
      *
      * Returns longitude and latitude of members of a geospatial index.
      *
@@ -2102,18 +2102,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "GEOPOS", arguments[0]];
+                args = [0x10001, "GEOPOS", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "GEOPOS", arguments[0], arguments[1]];
+                args = [0x10001, "GEOPOS", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "GEOPOS";
                 for(let n = 0; n < len; n++)
                 {
@@ -2121,14 +2121,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * GEORADIUS key longitude latitude radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count] [ASC|DESC] [STORE key] [STOREDIST key]
      *
-     * (write, movablekeys, 1, 1, 1)
-     * (arity -6, first key NaN, last key NaN)
+     * (write, movablekeys)
+     * (arity -6, first key 1, last key 1)
      *
      * Query a sorted set representing a geospatial index to fetch members matching a given maximum distance from a point.
      *
@@ -2152,7 +2152,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "GEORADIUS";
                 for(let n = 0; n < len; n++)
                 {
@@ -2160,14 +2160,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * GEORADIUS_RO key arg arg arg arg ...options...
      *
-     * (readonly, movablekeys, 1, 1, 1)
-     * (arity -6, first key NaN, last key NaN)
+     * (readonly, movablekeys)
+     * (arity -6, first key 1, last key 1)
      *
      * Help not available.
      *
@@ -2191,7 +2191,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "GEORADIUS_RO";
                 for(let n = 0; n < len; n++)
                 {
@@ -2199,14 +2199,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * GEORADIUSBYMEMBER key member radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count] [ASC|DESC] [STORE key] [STOREDIST key]
      *
-     * (write, movablekeys, 1, 1, 1)
-     * (arity -5, first key NaN, last key NaN)
+     * (write, movablekeys)
+     * (arity -5, first key 1, last key 1)
      *
      * Query a sorted set representing a geospatial index to fetch members matching a given maximum distance from a member.
      *
@@ -2229,7 +2229,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "GEORADIUSBYMEMBER";
                 for(let n = 0; n < len; n++)
                 {
@@ -2237,14 +2237,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * GEORADIUSBYMEMBER_RO key arg arg arg ...options...
      *
-     * (readonly, movablekeys, 1, 1, 1)
-     * (arity -5, first key NaN, last key NaN)
+     * (readonly, movablekeys)
+     * (arity -5, first key 1, last key 1)
      *
      * Help not available.
      *
@@ -2267,7 +2267,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "GEORADIUSBYMEMBER_RO";
                 for(let n = 0; n < len; n++)
                 {
@@ -2275,14 +2275,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * GET key
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Get the value of a key.
      *
@@ -2293,21 +2293,21 @@ class AbstractCommands
      */
     get(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "GET", arg0]);
+            return this._p([0x10001, "GET", arg0]);
         }
         else
         {
-            this._cc([0x10000, "GET", arg0, callback]);
+            this._c([0x10001, "GET", arg0, callback]);
         }
     }
 
     /**
      * GETBIT key offset
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Returns the bit value at offset in the string value stored at key.
      *
@@ -2319,21 +2319,21 @@ class AbstractCommands
      */
     getbit(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "GETBIT", arg0, arg1]);
+            return this._p([0x10001, "GETBIT", arg0, arg1]);
         }
         else
         {
-            this._cc([0x10000, "GETBIT", arg0, arg1, callback]);
+            this._c([0x10001, "GETBIT", arg0, arg1, callback]);
         }
     }
 
     /**
      * GETRANGE key start end
      *
-     * (readonly, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity 4, first key 1, last key 1)
      *
      * Get a substring of the string stored at a key.
      *
@@ -2355,7 +2355,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "GETRANGE";
                 for(let n = 0; n < len; n++)
                 {
@@ -2363,14 +2363,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * GETSET key value
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Set the string value of a key and return its old value.
      *
@@ -2382,21 +2382,21 @@ class AbstractCommands
      */
     getset(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "GETSET", arg0, arg1]);
+            return this._p([0x20001, "GETSET", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "GETSET", arg0, arg1, callback]);
+            this._c([0x20001, "GETSET", arg0, arg1, callback]);
         }
     }
 
     /**
      * HDEL key field [field ...]
      *
-     * (write, fast, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity -3, first key 1, last key 1)
      *
      * Delete one or more hash fields.
      *
@@ -2416,13 +2416,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "HDEL", arguments[0], arguments[1]];
+                args = [0x20001, "HDEL", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "HDEL";
                 for(let n = 0; n < len; n++)
                 {
@@ -2430,14 +2430,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * HELLO protover [AUTH username password] [SETNAME clientname]
      *
-     * (noscript, loading, stale, skip_monitor, skip_slowlog, fast, no_auth, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (noscript, loading, stale, skip_monitor, skip_slowlog, fast, no_auth)
+     * (arity -2, first key 0, last key 0)
      *
      * switch Redis protocol.
      *
@@ -2475,14 +2475,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * HEXISTS key field
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Determine if a hash field exists.
      *
@@ -2494,21 +2494,21 @@ class AbstractCommands
      */
     hexists(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "HEXISTS", arg0, arg1]);
+            return this._p([0x10001, "HEXISTS", arg0, arg1]);
         }
         else
         {
-            this._cc([0x10000, "HEXISTS", arg0, arg1, callback]);
+            this._c([0x10001, "HEXISTS", arg0, arg1, callback]);
         }
     }
 
     /**
      * HGET key field
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Get the value of a hash field.
      *
@@ -2520,21 +2520,21 @@ class AbstractCommands
      */
     hget(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "HGET", arg0, arg1]);
+            return this._p([0x10001, "HGET", arg0, arg1]);
         }
         else
         {
-            this._cc([0x10000, "HGET", arg0, arg1, callback]);
+            this._c([0x10001, "HGET", arg0, arg1, callback]);
         }
     }
 
     /**
      * HGETALL key
      *
-     * (readonly, random, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity 2, first key 1, last key 1)
      *
      * Get all the fields and values in a hash.
      *
@@ -2545,21 +2545,21 @@ class AbstractCommands
      */
     hgetall(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "HGETALL", arg0]);
+            return this._p([0x10001, "HGETALL", arg0]);
         }
         else
         {
-            this._cc([0x10000, "HGETALL", arg0, callback]);
+            this._c([0x10001, "HGETALL", arg0, callback]);
         }
     }
 
     /**
      * HINCRBY key field increment
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 4, first key 1, last key 1)
      *
      * Increment the integer value of a hash field by the given number.
      *
@@ -2581,7 +2581,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "HINCRBY";
                 for(let n = 0; n < len; n++)
                 {
@@ -2589,14 +2589,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * HINCRBYFLOAT key field increment
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 4, first key 1, last key 1)
      *
      * Increment the float value of a hash field by the given amount.
      *
@@ -2618,7 +2618,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "HINCRBYFLOAT";
                 for(let n = 0; n < len; n++)
                 {
@@ -2626,14 +2626,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * HKEYS key
      *
-     * (readonly, sort_for_script, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, sort_for_script)
+     * (arity 2, first key 1, last key 1)
      *
      * Get all the fields in a hash.
      *
@@ -2644,21 +2644,21 @@ class AbstractCommands
      */
     hkeys(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "HKEYS", arg0]);
+            return this._p([0x10001, "HKEYS", arg0]);
         }
         else
         {
-            this._cc([0x10000, "HKEYS", arg0, callback]);
+            this._c([0x10001, "HKEYS", arg0, callback]);
         }
     }
 
     /**
      * HLEN key
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Get the number of fields in a hash.
      *
@@ -2669,21 +2669,21 @@ class AbstractCommands
      */
     hlen(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "HLEN", arg0]);
+            return this._p([0x10001, "HLEN", arg0]);
         }
         else
         {
-            this._cc([0x10000, "HLEN", arg0, callback]);
+            this._c([0x10001, "HLEN", arg0, callback]);
         }
     }
 
     /**
      * HMGET key field [field ...]
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity -3, first key 1, last key 1)
      *
      * Get the values of all the given hash fields.
      *
@@ -2703,13 +2703,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x10000, "HMGET", arguments[0], arguments[1]];
+                args = [0x10001, "HMGET", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "HMGET";
                 for(let n = 0; n < len; n++)
                 {
@@ -2717,14 +2717,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * HMSET key field value [field value ...]
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity -4, first key 1, last key 1)
      *
      * Set multiple hash fields to multiple values.
      *
@@ -2746,7 +2746,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "HMSET";
                 for(let n = 0; n < len; n++)
                 {
@@ -2754,14 +2754,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * HOST: ...options...
      *
-     * (readonly, loading, stale, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (readonly, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Help not available.
      *
@@ -2800,14 +2800,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * HSCAN key cursor [MATCH pattern] [COUNT count]
      *
-     * (readonly, random, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity -3, first key 1, last key 1)
      *
      * Incrementally iterate hash fields and associated values.
      *
@@ -2827,13 +2827,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x10000, "HSCAN", arguments[0], arguments[1]];
+                args = [0x10001, "HSCAN", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "HSCAN";
                 for(let n = 0; n < len; n++)
                 {
@@ -2841,14 +2841,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * HSET key field value [field value ...]
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity -4, first key 1, last key 1)
      *
      * Set the string value of a hash field.
      *
@@ -2870,7 +2870,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "HSET";
                 for(let n = 0; n < len; n++)
                 {
@@ -2878,14 +2878,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * HSETNX key field value
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 4, first key 1, last key 1)
      *
      * Set the value of a hash field, only if the field does not exist.
      *
@@ -2907,7 +2907,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "HSETNX";
                 for(let n = 0; n < len; n++)
                 {
@@ -2915,14 +2915,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * HSTRLEN key field
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Get the length of the value of a hash field.
      *
@@ -2934,21 +2934,21 @@ class AbstractCommands
      */
     hstrlen(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "HSTRLEN", arg0, arg1]);
+            return this._p([0x10001, "HSTRLEN", arg0, arg1]);
         }
         else
         {
-            this._cc([0x10000, "HSTRLEN", arg0, arg1, callback]);
+            this._c([0x10001, "HSTRLEN", arg0, arg1, callback]);
         }
     }
 
     /**
      * HVALS key
      *
-     * (readonly, sort_for_script, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, sort_for_script)
+     * (arity 2, first key 1, last key 1)
      *
      * Get all the values in a hash.
      *
@@ -2959,21 +2959,21 @@ class AbstractCommands
      */
     hvals(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "HVALS", arg0]);
+            return this._p([0x10001, "HVALS", arg0]);
         }
         else
         {
-            this._cc([0x10000, "HVALS", arg0, callback]);
+            this._c([0x10001, "HVALS", arg0, callback]);
         }
     }
 
     /**
      * INCR key
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Increment the integer value of a key by one.
      *
@@ -2984,21 +2984,21 @@ class AbstractCommands
      */
     incr(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "INCR", arg0]);
+            return this._p([0x20001, "INCR", arg0]);
         }
         else
         {
-            this._cc([0x20000, "INCR", arg0, callback]);
+            this._c([0x20001, "INCR", arg0, callback]);
         }
     }
 
     /**
      * INCRBY key increment
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Increment the integer value of a key by the given amount.
      *
@@ -3010,21 +3010,21 @@ class AbstractCommands
      */
     incrby(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "INCRBY", arg0, arg1]);
+            return this._p([0x20001, "INCRBY", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "INCRBY", arg0, arg1, callback]);
+            this._c([0x20001, "INCRBY", arg0, arg1, callback]);
         }
     }
 
     /**
      * INCRBYFLOAT key increment
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Increment the float value of a key by the given amount.
      *
@@ -3036,21 +3036,21 @@ class AbstractCommands
      */
     incrbyfloat(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "INCRBYFLOAT", arg0, arg1]);
+            return this._p([0x20001, "INCRBYFLOAT", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "INCRBYFLOAT", arg0, arg1, callback]);
+            this._c([0x20001, "INCRBYFLOAT", arg0, arg1, callback]);
         }
     }
 
     /**
      * INFO [section]
      *
-     * (random, loading, stale, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (random, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Get information and statistics about the server.
      *
@@ -3089,14 +3089,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * KEYS pattern
      *
-     * (readonly, sort_for_script, 0, 0, 0, @keyspace)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, sort_for_script)
+     * (arity 2, first key 0, last key 0)
      *
      * Find all keys matching the given pattern.
      *
@@ -3107,21 +3107,21 @@ class AbstractCommands
      */
     keys(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "KEYS", arg0]);
+            return this._p([0x10000, "KEYS", arg0]);
         }
         else
         {
-            this._cc([0x10000, "KEYS", arg0, callback]);
+            this._c([0x10000, "KEYS", arg0, callback]);
         }
     }
 
     /**
      * LASTSAVE -
      *
-     * (readonly, random, loading, stale, fast, 0, 0, 0, @read)
-     * (arity 1, first key NaN, last key NaN)
+     * (readonly, random, loading, stale, fast)
+     * (arity 1, first key 0, last key 0)
      *
      * Get the UNIX time stamp of the last successful save to disk.
      *
@@ -3131,21 +3131,21 @@ class AbstractCommands
      */
     lastsave(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "LASTSAVE"]);
+            return this._p([0x10000, "LASTSAVE"]);
         }
         else
         {
-            this._cc([0x10000, "LASTSAVE", callback]);
+            this._c([0x10000, "LASTSAVE", callback]);
         }
     }
 
     /**
      * LATENCY DOCTOR -
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Return a human readable latency analysis report.
      *
@@ -3156,8 +3156,8 @@ class AbstractCommands
      *
      * LATENCY GRAPH event
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Return a latency graph for the event.
      *
@@ -3168,8 +3168,8 @@ class AbstractCommands
      *
      * LATENCY HELP -
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Show helpful text about the different subcommands.
      *
@@ -3180,8 +3180,8 @@ class AbstractCommands
      *
      * LATENCY HISTORY event
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Return timestamp-latency samples for the event.
      *
@@ -3192,8 +3192,8 @@ class AbstractCommands
      *
      * LATENCY LATEST -
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Return the latest latency samples for all events.
      *
@@ -3204,8 +3204,8 @@ class AbstractCommands
      *
      * LATENCY RESET [event]
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Reset latency data for one or more events.
      *
@@ -3243,14 +3243,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * LINDEX key index
      *
-     * (readonly, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (readonly)
+     * (arity 3, first key 1, last key 1)
      *
      * Get an element from a list by its index.
      *
@@ -3262,21 +3262,21 @@ class AbstractCommands
      */
     lindex(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "LINDEX", arg0, arg1]);
+            return this._p([0x10001, "LINDEX", arg0, arg1]);
         }
         else
         {
-            this._cc([0x10000, "LINDEX", arg0, arg1, callback]);
+            this._c([0x10001, "LINDEX", arg0, arg1, callback]);
         }
     }
 
     /**
      * LINSERT key BEFORE|AFTER pivot element
      *
-     * (write, denyoom, 1, 1, 1)
-     * (arity 5, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity 5, first key 1, last key 1)
      *
      * Insert an element before or after another element in a list.
      *
@@ -3299,7 +3299,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "LINSERT";
                 for(let n = 0; n < len; n++)
                 {
@@ -3307,14 +3307,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * LLEN key
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Get the length of a list.
      *
@@ -3325,21 +3325,21 @@ class AbstractCommands
      */
     llen(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "LLEN", arg0]);
+            return this._p([0x10001, "LLEN", arg0]);
         }
         else
         {
-            this._cc([0x10000, "LLEN", arg0, callback]);
+            this._c([0x10001, "LLEN", arg0, callback]);
         }
     }
 
     /**
      * LOLWUT [VERSION version]
      *
-     * (readonly, fast, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (readonly, fast)
+     * (arity -1, first key 0, last key 0)
      *
      * Display some computer art and the Redis version.
      *
@@ -3378,14 +3378,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * LPOP key
      *
-     * (write, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Remove and get the first element in a list.
      *
@@ -3396,21 +3396,21 @@ class AbstractCommands
      */
     lpop(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "LPOP", arg0]);
+            return this._p([0x20001, "LPOP", arg0]);
         }
         else
         {
-            this._cc([0x20000, "LPOP", arg0, callback]);
+            this._c([0x20001, "LPOP", arg0, callback]);
         }
     }
 
     /**
      * LPUSH key element [element ...]
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity -3, first key 1, last key 1)
      *
      * Prepend one or multiple elements to a list.
      *
@@ -3430,13 +3430,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "LPUSH", arguments[0], arguments[1]];
+                args = [0x20001, "LPUSH", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "LPUSH";
                 for(let n = 0; n < len; n++)
                 {
@@ -3444,14 +3444,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * LPUSHX key element [element ...]
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity -3, first key 1, last key 1)
      *
      * Prepend an element to a list, only if the list exists.
      *
@@ -3471,13 +3471,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "LPUSHX", arguments[0], arguments[1]];
+                args = [0x20001, "LPUSHX", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "LPUSHX";
                 for(let n = 0; n < len; n++)
                 {
@@ -3485,14 +3485,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * LRANGE key start stop
      *
-     * (readonly, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity 4, first key 1, last key 1)
      *
      * Get a range of elements from a list.
      *
@@ -3514,7 +3514,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "LRANGE";
                 for(let n = 0; n < len; n++)
                 {
@@ -3522,14 +3522,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * LREM key count element
      *
-     * (write, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write)
+     * (arity 4, first key 1, last key 1)
      *
      * Remove elements from a list.
      *
@@ -3551,7 +3551,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "LREM";
                 for(let n = 0; n < len; n++)
                 {
@@ -3559,14 +3559,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * LSET key index element
      *
-     * (write, denyoom, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity 4, first key 1, last key 1)
      *
      * Set the value of an element in a list by its index.
      *
@@ -3588,7 +3588,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "LSET";
                 for(let n = 0; n < len; n++)
                 {
@@ -3596,14 +3596,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * LTRIM key start stop
      *
-     * (write, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write)
+     * (arity 4, first key 1, last key 1)
      *
      * Trim a list to the specified range.
      *
@@ -3625,7 +3625,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "LTRIM";
                 for(let n = 0; n < len; n++)
                 {
@@ -3633,14 +3633,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * MEMORY DOCTOR -
      *
-     * (readonly, random, movablekeys, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (readonly, random, movablekeys)
+     * (arity -2, first key 0, last key 0)
      *
      * Outputs memory problems report.
      *
@@ -3651,8 +3651,8 @@ class AbstractCommands
      *
      * MEMORY HELP -
      *
-     * (readonly, random, movablekeys, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (readonly, random, movablekeys)
+     * (arity -2, first key 0, last key 0)
      *
      * Show helpful text about the different subcommands.
      *
@@ -3663,8 +3663,8 @@ class AbstractCommands
      *
      * MEMORY MALLOC-STATS -
      *
-     * (readonly, random, movablekeys, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (readonly, random, movablekeys)
+     * (arity -2, first key 0, last key 0)
      *
      * Show allocator internal stats.
      *
@@ -3675,8 +3675,8 @@ class AbstractCommands
      *
      * MEMORY PURGE -
      *
-     * (readonly, random, movablekeys, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (readonly, random, movablekeys)
+     * (arity -2, first key 0, last key 0)
      *
      * Ask the allocator to release memory.
      *
@@ -3687,8 +3687,8 @@ class AbstractCommands
      *
      * MEMORY STATS -
      *
-     * (readonly, random, movablekeys, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (readonly, random, movablekeys)
+     * (arity -2, first key 0, last key 0)
      *
      * Show memory usage details.
      *
@@ -3699,8 +3699,8 @@ class AbstractCommands
      *
      * MEMORY USAGE key [SAMPLES count]
      *
-     * (readonly, random, movablekeys, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (readonly, random, movablekeys)
+     * (arity -2, first key 0, last key 0)
      *
      * Estimate the memory usage of a key.
      *
@@ -3738,14 +3738,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * MGET key [key ...]
      *
-     * (readonly, fast, 1, -1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity -2, first key 1, last key -1)
      *
      * Get the values of all the given keys.
      *
@@ -3764,18 +3764,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "MGET", arguments[0]];
+                args = [0x10001, "MGET", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "MGET", arguments[0], arguments[1]];
+                args = [0x10001, "MGET", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "MGET";
                 for(let n = 0; n < len; n++)
                 {
@@ -3783,14 +3783,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * MIGRATE host port key| destination-db timeout [COPY] [REPLACE] [AUTH password] [KEYS key]
      *
-     * (write, random, movablekeys, 0, 0, 0, @keyspace)
-     * (arity -6, first key NaN, last key NaN)
+     * (write, random, movablekeys)
+     * (arity -6, first key 0, last key 0)
      *
      * Atomically transfer a key from a Redis instance to another one.
      *
@@ -3822,14 +3822,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * MODULE LIST -
      *
-     * (admin, noscript, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript)
+     * (arity -2, first key 0, last key 0)
      *
      * List all modules loaded by the server.
      *
@@ -3840,8 +3840,8 @@ class AbstractCommands
      *
      * MODULE LOAD path [arg]
      *
-     * (admin, noscript, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript)
+     * (arity -2, first key 0, last key 0)
      *
      * Load a module.
      *
@@ -3852,8 +3852,8 @@ class AbstractCommands
      *
      * MODULE UNLOAD name
      *
-     * (admin, noscript, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, noscript)
+     * (arity -2, first key 0, last key 0)
      *
      * Unload a module.
      *
@@ -3891,14 +3891,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * MONITOR -
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity 1, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity 1, first key 0, last key 0)
      *
      * Listen for all requests received by the server in real time.
      *
@@ -3908,21 +3908,21 @@ class AbstractCommands
      */
     monitor(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "MONITOR"]);
+            return this._p([0x0, "MONITOR"]);
         }
         else
         {
-            this._cc([0x0, "MONITOR", callback]);
+            this._c([0x0, "MONITOR", callback]);
         }
     }
 
     /**
      * MOVE key db
      *
-     * (write, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Move a key to another database.
      *
@@ -3934,21 +3934,21 @@ class AbstractCommands
      */
     move(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "MOVE", arg0, arg1]);
+            return this._p([0x20001, "MOVE", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "MOVE", arg0, arg1, callback]);
+            this._c([0x20001, "MOVE", arg0, arg1, callback]);
         }
     }
 
     /**
      * MSET key value [key value ...]
      *
-     * (write, denyoom, 1, -1, 2)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -3, first key 1, last key -1)
      *
      * Set multiple keys to multiple values.
      *
@@ -3968,13 +3968,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "MSET", arguments[0], arguments[1]];
+                args = [0x20001, "MSET", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "MSET";
                 for(let n = 0; n < len; n++)
                 {
@@ -3982,14 +3982,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * MSETNX key value [key value ...]
      *
-     * (write, denyoom, 1, -1, 2)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -3, first key 1, last key -1)
      *
      * Set multiple keys to multiple values, only if none of the keys exist.
      *
@@ -4009,13 +4009,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "MSETNX", arguments[0], arguments[1]];
+                args = [0x20001, "MSETNX", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "MSETNX";
                 for(let n = 0; n < len; n++)
                 {
@@ -4023,14 +4023,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * MULTI -
      *
-     * (noscript, loading, stale, fast, 0, 0)
-     * (arity 1, first key 0, last key NaN)
+     * (noscript, loading, stale, fast)
+     * (arity 1, first key 0, last key 0)
      *
      * Mark the start of a transaction block.
      *
@@ -4040,21 +4040,21 @@ class AbstractCommands
      */
     multi(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "MULTI"]);
+            return this._p([0x0, "MULTI"]);
         }
         else
         {
-            this._cc([0x0, "MULTI", callback]);
+            this._c([0x0, "MULTI", callback]);
         }
     }
 
     /**
      * OBJECT subcommand [arguments [arguments ...]]
      *
-     * (readonly, random, 2, 2, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity -2, first key 2, last key 2)
      *
      * Inspect the internals of Redis objects.
      *
@@ -4073,18 +4073,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "OBJECT", arguments[0]];
+                args = [0x10002, "OBJECT", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "OBJECT", arguments[0], arguments[1]];
+                args = [0x10002, "OBJECT", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10002;
                 args[1] = "OBJECT";
                 for(let n = 0; n < len; n++)
                 {
@@ -4092,14 +4092,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * PERSIST key
      *
-     * (write, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Remove the expiration from a key.
      *
@@ -4110,21 +4110,21 @@ class AbstractCommands
      */
     persist(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "PERSIST", arg0]);
+            return this._p([0x20001, "PERSIST", arg0]);
         }
         else
         {
-            this._cc([0x20000, "PERSIST", arg0, callback]);
+            this._c([0x20001, "PERSIST", arg0, callback]);
         }
     }
 
     /**
      * PEXPIRE key milliseconds
      *
-     * (write, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Set a key's time to live in milliseconds.
      *
@@ -4136,21 +4136,21 @@ class AbstractCommands
      */
     pexpire(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "PEXPIRE", arg0, arg1]);
+            return this._p([0x20001, "PEXPIRE", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "PEXPIRE", arg0, arg1, callback]);
+            this._c([0x20001, "PEXPIRE", arg0, arg1, callback]);
         }
     }
 
     /**
      * PEXPIREAT key milliseconds-timestamp
      *
-     * (write, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Set the expiration for a key as a UNIX timestamp specified in milliseconds.
      *
@@ -4162,21 +4162,21 @@ class AbstractCommands
      */
     pexpireat(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "PEXPIREAT", arg0, arg1]);
+            return this._p([0x20001, "PEXPIREAT", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "PEXPIREAT", arg0, arg1, callback]);
+            this._c([0x20001, "PEXPIREAT", arg0, arg1, callback]);
         }
     }
 
     /**
      * PFADD key element [element ...]
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity -2, first key 1, last key 1)
      *
      * Adds the specified elements to the specified HyperLogLog.
      *
@@ -4195,18 +4195,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "PFADD", arguments[0]];
+                args = [0x20001, "PFADD", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "PFADD", arguments[0], arguments[1]];
+                args = [0x20001, "PFADD", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "PFADD";
                 for(let n = 0; n < len; n++)
                 {
@@ -4214,14 +4214,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * PFCOUNT key [key ...]
      *
-     * (readonly, 1, -1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -2, first key 1, last key -1)
      *
      * Return the approximated cardinality of the set(s) observed by the HyperLogLog at key(s).
      *
@@ -4240,18 +4240,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "PFCOUNT", arguments[0]];
+                args = [0x10001, "PFCOUNT", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "PFCOUNT", arguments[0], arguments[1]];
+                args = [0x10001, "PFCOUNT", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "PFCOUNT";
                 for(let n = 0; n < len; n++)
                 {
@@ -4259,14 +4259,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * PFDEBUG arg arg ...options...
      *
-     * (write, admin, 0, 0, 0, @write)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, admin)
+     * (arity -3, first key 0, last key 0)
      *
      * Help not available.
      *
@@ -4300,14 +4300,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * PFMERGE destkey sourcekey [sourcekey ...]
      *
-     * (write, denyoom, 1, -1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -2, first key 1, last key -1)
      *
      * Merge N different HyperLogLogs into a single one.
      *
@@ -4326,18 +4326,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "PFMERGE", arguments[0]];
+                args = [0x20001, "PFMERGE", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "PFMERGE", arguments[0], arguments[1]];
+                args = [0x20001, "PFMERGE", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "PFMERGE";
                 for(let n = 0; n < len; n++)
                 {
@@ -4345,14 +4345,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * PFSELFTEST 
      *
-     * (admin, 0, 0, 0, @hyperloglog)
-     * (arity 1, first key NaN, last key NaN)
+     * (admin)
+     * (arity 1, first key 0, last key 0)
      *
      * Help not available.
      *
@@ -4362,21 +4362,21 @@ class AbstractCommands
      */
     pfselftest(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "PFSELFTEST"]);
+            return this._p([0x0, "PFSELFTEST"]);
         }
         else
         {
-            this._cc([0x0, "PFSELFTEST", callback]);
+            this._c([0x0, "PFSELFTEST", callback]);
         }
     }
 
     /**
      * PING [message]
      *
-     * (stale, fast, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (stale, fast)
+     * (arity -1, first key 0, last key 0)
      *
      * Ping the server.
      *
@@ -4415,14 +4415,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * POST ...options...
      *
-     * (readonly, loading, stale, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (readonly, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Help not available.
      *
@@ -4461,14 +4461,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * PSETEX key milliseconds value
      *
-     * (write, denyoom, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity 4, first key 1, last key 1)
      *
      * Set the value and expiration in milliseconds of a key.
      *
@@ -4490,7 +4490,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "PSETEX";
                 for(let n = 0; n < len; n++)
                 {
@@ -4498,14 +4498,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * PSUBSCRIBE pattern [pattern ...]
      *
-     * (pubsub, noscript, loading, stale, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (pubsub, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Listen for messages published to channels matching the given patterns.
      *
@@ -4543,14 +4543,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * PSYNC replicationid offset
      *
-     * (admin, noscript, 0, 0, 0)
-     * (arity 3, first key NaN, last key NaN)
+     * (admin, noscript)
+     * (arity 3, first key 0, last key 0)
      *
      * Internal command used for replication.
      *
@@ -4562,21 +4562,21 @@ class AbstractCommands
      */
     psync(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "PSYNC", arg0, arg1]);
+            return this._p([0x0, "PSYNC", arg0, arg1]);
         }
         else
         {
-            this._cc([0x0, "PSYNC", arg0, arg1, callback]);
+            this._c([0x0, "PSYNC", arg0, arg1, callback]);
         }
     }
 
     /**
      * PTTL key
      *
-     * (readonly, random, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, random, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Get the time to live for a key in milliseconds.
      *
@@ -4587,21 +4587,21 @@ class AbstractCommands
      */
     pttl(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "PTTL", arg0]);
+            return this._p([0x10001, "PTTL", arg0]);
         }
         else
         {
-            this._cc([0x10000, "PTTL", arg0, callback]);
+            this._c([0x10001, "PTTL", arg0, callback]);
         }
     }
 
     /**
      * PUBLISH channel message
      *
-     * (pubsub, loading, stale, fast, 0, 0)
-     * (arity 3, first key 0, last key NaN)
+     * (pubsub, loading, stale, fast)
+     * (arity 3, first key 0, last key 0)
      *
      * Post a message to a channel.
      *
@@ -4613,21 +4613,21 @@ class AbstractCommands
      */
     publish(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "PUBLISH", arg0, arg1]);
+            return this._p([0x0, "PUBLISH", arg0, arg1]);
         }
         else
         {
-            this._cc([0x0, "PUBLISH", arg0, arg1, callback]);
+            this._c([0x0, "PUBLISH", arg0, arg1, callback]);
         }
     }
 
     /**
      * PUBSUB subcommand [argument [argument ...]]
      *
-     * (pubsub, random, loading, stale, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (pubsub, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Inspect the state of the Pub/Sub subsystem.
      *
@@ -4665,14 +4665,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * PUNSUBSCRIBE [pattern [pattern ...]]
      *
-     * (pubsub, noscript, loading, stale, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (pubsub, noscript, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Stop listening for messages posted to channels matching the given patterns.
      *
@@ -4711,7 +4711,7 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
@@ -4752,14 +4752,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * RANDOMKEY -
      *
-     * (readonly, random, 0, 0, 0)
-     * (arity 1, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity 1, first key 0, last key 0)
      *
      * Return a random key from the keyspace.
      *
@@ -4769,21 +4769,21 @@ class AbstractCommands
      */
     randomkey(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "RANDOMKEY"]);
+            return this._p([0x10000, "RANDOMKEY"]);
         }
         else
         {
-            this._cc([0x10000, "RANDOMKEY", callback]);
+            this._c([0x10000, "RANDOMKEY", callback]);
         }
     }
 
     /**
      * READONLY -
      *
-     * (fast, 0, 0)
-     * (arity 1, first key 0, last key NaN)
+     * (fast)
+     * (arity 1, first key 0, last key 0)
      *
      * Enables read queries for a connection to a cluster replica node.
      *
@@ -4793,21 +4793,21 @@ class AbstractCommands
      */
     readonly(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "READONLY"]);
+            return this._p([0x0, "READONLY"]);
         }
         else
         {
-            this._cc([0x0, "READONLY", callback]);
+            this._c([0x0, "READONLY", callback]);
         }
     }
 
     /**
      * READWRITE -
      *
-     * (fast, 0, 0)
-     * (arity 1, first key 0, last key NaN)
+     * (fast)
+     * (arity 1, first key 0, last key 0)
      *
      * Disables read queries for a connection to a cluster replica node.
      *
@@ -4817,21 +4817,21 @@ class AbstractCommands
      */
     readwrite(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "READWRITE"]);
+            return this._p([0x0, "READWRITE"]);
         }
         else
         {
-            this._cc([0x0, "READWRITE", callback]);
+            this._c([0x0, "READWRITE", callback]);
         }
     }
 
     /**
      * RENAME key newkey
      *
-     * (write, 1, 2, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write)
+     * (arity 3, first key 1, last key 2)
      *
      * Rename a key.
      *
@@ -4843,21 +4843,21 @@ class AbstractCommands
      */
     rename(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "RENAME", arg0, arg1]);
+            return this._p([0x20001, "RENAME", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "RENAME", arg0, arg1, callback]);
+            this._c([0x20001, "RENAME", arg0, arg1, callback]);
         }
     }
 
     /**
      * RENAMENX key newkey
      *
-     * (write, fast, 1, 2, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 3, first key 1, last key 2)
      *
      * Rename a key, only if the new key does not exist.
      *
@@ -4869,21 +4869,21 @@ class AbstractCommands
      */
     renamenx(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "RENAMENX", arg0, arg1]);
+            return this._p([0x20001, "RENAMENX", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "RENAMENX", arg0, arg1, callback]);
+            this._c([0x20001, "RENAMENX", arg0, arg1, callback]);
         }
     }
 
     /**
      * REPLCONF ...options...
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -1, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Help not available.
      *
@@ -4922,14 +4922,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * REPLICAOF host port
      *
-     * (admin, noscript, stale, 0, 0, 0)
-     * (arity 3, first key NaN, last key NaN)
+     * (admin, noscript, stale)
+     * (arity 3, first key 0, last key 0)
      *
      * Make the server a replica of another instance, or promote it as master.
      *
@@ -4941,21 +4941,21 @@ class AbstractCommands
      */
     replicaof(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "REPLICAOF", arg0, arg1]);
+            return this._p([0x0, "REPLICAOF", arg0, arg1]);
         }
         else
         {
-            this._cc([0x0, "REPLICAOF", arg0, arg1, callback]);
+            this._c([0x0, "REPLICAOF", arg0, arg1, callback]);
         }
     }
 
     /**
      * RESTORE key ttl serialized-value [REPLACE] [ABSTTL] [IDLETIME seconds] [FREQ frequency]
      *
-     * (write, denyoom, 1, 1, 1, @keyspace)
-     * (arity -4, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -4, first key 1, last key 1)
      *
      * Create a key using the provided serialized value, previously obtained using DUMP.
      *
@@ -4977,7 +4977,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "RESTORE";
                 for(let n = 0; n < len; n++)
                 {
@@ -4985,14 +4985,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * RESTORE-ASKING key arg arg ...options...
      *
-     * (write, denyoom, asking, 1, 1, 1, @keyspace)
-     * (arity -4, first key NaN, last key NaN)
+     * (write, denyoom, asking)
+     * (arity -4, first key 1, last key 1)
      *
      * Help not available.
      *
@@ -5014,7 +5014,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "RESTORE-ASKING";
                 for(let n = 0; n < len; n++)
                 {
@@ -5022,14 +5022,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ROLE -
      *
-     * (readonly, noscript, loading, stale, fast, 0, 0, 0)
-     * (arity 1, first key NaN, last key NaN)
+     * (readonly, noscript, loading, stale, fast)
+     * (arity 1, first key 0, last key 0)
      *
      * Return the role of the instance in the context of replication.
      *
@@ -5039,21 +5039,21 @@ class AbstractCommands
      */
     role(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "ROLE"]);
+            return this._p([0x10000, "ROLE"]);
         }
         else
         {
-            this._cc([0x10000, "ROLE", callback]);
+            this._c([0x10000, "ROLE", callback]);
         }
     }
 
     /**
      * RPOP key
      *
-     * (write, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Remove and get the last element in a list.
      *
@@ -5064,21 +5064,21 @@ class AbstractCommands
      */
     rpop(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "RPOP", arg0]);
+            return this._p([0x20001, "RPOP", arg0]);
         }
         else
         {
-            this._cc([0x20000, "RPOP", arg0, callback]);
+            this._c([0x20001, "RPOP", arg0, callback]);
         }
     }
 
     /**
      * RPOPLPUSH source destination
      *
-     * (write, denyoom, 1, 2, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity 3, first key 1, last key 2)
      *
      * Remove the last element in a list, prepend it to another list and return it.
      *
@@ -5090,21 +5090,21 @@ class AbstractCommands
      */
     rpoplpush(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "RPOPLPUSH", arg0, arg1]);
+            return this._p([0x20001, "RPOPLPUSH", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "RPOPLPUSH", arg0, arg1, callback]);
+            this._c([0x20001, "RPOPLPUSH", arg0, arg1, callback]);
         }
     }
 
     /**
      * RPUSH key element [element ...]
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity -3, first key 1, last key 1)
      *
      * Append one or multiple elements to a list.
      *
@@ -5124,13 +5124,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "RPUSH", arguments[0], arguments[1]];
+                args = [0x20001, "RPUSH", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "RPUSH";
                 for(let n = 0; n < len; n++)
                 {
@@ -5138,14 +5138,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * RPUSHX key element [element ...]
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity -3, first key 1, last key 1)
      *
      * Append an element to a list, only if the list exists.
      *
@@ -5165,13 +5165,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "RPUSHX", arguments[0], arguments[1]];
+                args = [0x20001, "RPUSHX", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "RPUSHX";
                 for(let n = 0; n < len; n++)
                 {
@@ -5179,14 +5179,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SADD key member [member ...]
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity -3, first key 1, last key 1)
      *
      * Add one or more members to a set.
      *
@@ -5206,13 +5206,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "SADD", arguments[0], arguments[1]];
+                args = [0x20001, "SADD", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SADD";
                 for(let n = 0; n < len; n++)
                 {
@@ -5220,14 +5220,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SAVE -
      *
-     * (admin, noscript, 0, 0, 0)
-     * (arity 1, first key NaN, last key NaN)
+     * (admin, noscript)
+     * (arity 1, first key 0, last key 0)
      *
      * Synchronously save the dataset to disk.
      *
@@ -5237,21 +5237,21 @@ class AbstractCommands
      */
     save(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "SAVE"]);
+            return this._p([0x0, "SAVE"]);
         }
         else
         {
-            this._cc([0x0, "SAVE", callback]);
+            this._c([0x0, "SAVE", callback]);
         }
     }
 
     /**
      * SCAN cursor [MATCH pattern] [COUNT count] [TYPE type]
      *
-     * (readonly, random, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity -2, first key 0, last key 0)
      *
      * Incrementally iterate the keys space.
      *
@@ -5289,14 +5289,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SCARD key
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Get the number of members in a set.
      *
@@ -5307,21 +5307,21 @@ class AbstractCommands
      */
     scard(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "SCARD", arg0]);
+            return this._p([0x10001, "SCARD", arg0]);
         }
         else
         {
-            this._cc([0x10000, "SCARD", arg0, callback]);
+            this._c([0x10001, "SCARD", arg0, callback]);
         }
     }
 
     /**
      * SCRIPT DEBUG YES|SYNC|NO
      *
-     * (noscript, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (noscript)
+     * (arity -2, first key 0, last key 0)
      *
      * Set the debug mode for executed scripts.
      *
@@ -5332,8 +5332,8 @@ class AbstractCommands
      *
      * SCRIPT EXISTS sha1 [sha1 ...]
      *
-     * (noscript, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (noscript)
+     * (arity -2, first key 0, last key 0)
      *
      * Check existence of scripts in the script cache.
      *
@@ -5344,8 +5344,8 @@ class AbstractCommands
      *
      * SCRIPT FLUSH -
      *
-     * (noscript, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (noscript)
+     * (arity -2, first key 0, last key 0)
      *
      * Remove all the scripts from the script cache.
      *
@@ -5356,8 +5356,8 @@ class AbstractCommands
      *
      * SCRIPT KILL -
      *
-     * (noscript, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (noscript)
+     * (arity -2, first key 0, last key 0)
      *
      * Kill the script currently in execution.
      *
@@ -5368,8 +5368,8 @@ class AbstractCommands
      *
      * SCRIPT LOAD script
      *
-     * (noscript, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (noscript)
+     * (arity -2, first key 0, last key 0)
      *
      * Load the specified Lua script into the script cache.
      *
@@ -5407,14 +5407,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SDIFF key [key ...]
      *
-     * (readonly, sort_for_script, 1, -1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, sort_for_script)
+     * (arity -2, first key 1, last key -1)
      *
      * Subtract multiple sets.
      *
@@ -5433,18 +5433,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "SDIFF", arguments[0]];
+                args = [0x10001, "SDIFF", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "SDIFF", arguments[0], arguments[1]];
+                args = [0x10001, "SDIFF", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "SDIFF";
                 for(let n = 0; n < len; n++)
                 {
@@ -5452,14 +5452,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SDIFFSTORE destination key [key ...]
      *
-     * (write, denyoom, 1, -1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -3, first key 1, last key -1)
      *
      * Subtract multiple sets and store the resulting set in a key.
      *
@@ -5479,13 +5479,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "SDIFFSTORE", arguments[0], arguments[1]];
+                args = [0x20001, "SDIFFSTORE", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SDIFFSTORE";
                 for(let n = 0; n < len; n++)
                 {
@@ -5493,14 +5493,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SELECT index
      *
-     * (loading, stale, fast, 0, 0)
-     * (arity 2, first key 0, last key NaN)
+     * (loading, stale, fast)
+     * (arity 2, first key 0, last key 0)
      *
      * Change the selected database for the current connection.
      *
@@ -5511,21 +5511,21 @@ class AbstractCommands
      */
     select(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "SELECT", arg0]);
+            return this._p([0x0, "SELECT", arg0]);
         }
         else
         {
-            this._cc([0x0, "SELECT", arg0, callback]);
+            this._c([0x0, "SELECT", arg0, callback]);
         }
     }
 
     /**
      * SET key value [EX seconds|PX milliseconds] [NX|XX] [KEEPTTL]
      *
-     * (write, denyoom, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -3, first key 1, last key 1)
      *
      * Set the string value of a key.
      *
@@ -5545,13 +5545,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "SET", arguments[0], arguments[1]];
+                args = [0x20001, "SET", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SET";
                 for(let n = 0; n < len; n++)
                 {
@@ -5559,14 +5559,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SETBIT key offset value
      *
-     * (write, denyoom, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity 4, first key 1, last key 1)
      *
      * Sets or clears the bit at offset in the string value stored at key.
      *
@@ -5588,7 +5588,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SETBIT";
                 for(let n = 0; n < len; n++)
                 {
@@ -5596,14 +5596,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SETEX key seconds value
      *
-     * (write, denyoom, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity 4, first key 1, last key 1)
      *
      * Set the value and expiration of a key.
      *
@@ -5625,7 +5625,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SETEX";
                 for(let n = 0; n < len; n++)
                 {
@@ -5633,14 +5633,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SETNX key value
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Set the value of a key, only if the key does not exist.
      *
@@ -5652,21 +5652,21 @@ class AbstractCommands
      */
     setnx(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "SETNX", arg0, arg1]);
+            return this._p([0x20001, "SETNX", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "SETNX", arg0, arg1, callback]);
+            this._c([0x20001, "SETNX", arg0, arg1, callback]);
         }
     }
 
     /**
      * SETRANGE key offset value
      *
-     * (write, denyoom, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity 4, first key 1, last key 1)
      *
      * Overwrite part of a string at key starting at the specified offset.
      *
@@ -5688,7 +5688,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SETRANGE";
                 for(let n = 0; n < len; n++)
                 {
@@ -5696,14 +5696,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SHUTDOWN [NOSAVE|SAVE]
      *
-     * (admin, noscript, loading, stale, 0, 0, 0)
-     * (arity -1, first key NaN, last key NaN)
+     * (admin, noscript, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Synchronously save the dataset to disk and then shut down the server.
      *
@@ -5742,14 +5742,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SINTER key [key ...]
      *
-     * (readonly, sort_for_script, 1, -1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, sort_for_script)
+     * (arity -2, first key 1, last key -1)
      *
      * Intersect multiple sets.
      *
@@ -5768,18 +5768,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "SINTER", arguments[0]];
+                args = [0x10001, "SINTER", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "SINTER", arguments[0], arguments[1]];
+                args = [0x10001, "SINTER", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "SINTER";
                 for(let n = 0; n < len; n++)
                 {
@@ -5787,14 +5787,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SINTERSTORE destination key [key ...]
      *
-     * (write, denyoom, 1, -1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -3, first key 1, last key -1)
      *
      * Intersect multiple sets and store the resulting set in a key.
      *
@@ -5814,13 +5814,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "SINTERSTORE", arguments[0], arguments[1]];
+                args = [0x20001, "SINTERSTORE", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SINTERSTORE";
                 for(let n = 0; n < len; n++)
                 {
@@ -5828,14 +5828,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SISMEMBER key member
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Determine if a given value is a member of a set.
      *
@@ -5847,21 +5847,21 @@ class AbstractCommands
      */
     sismember(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "SISMEMBER", arg0, arg1]);
+            return this._p([0x10001, "SISMEMBER", arg0, arg1]);
         }
         else
         {
-            this._cc([0x10000, "SISMEMBER", arg0, arg1, callback]);
+            this._c([0x10001, "SISMEMBER", arg0, arg1, callback]);
         }
     }
 
     /**
      * SLAVEOF host port
      *
-     * (admin, noscript, stale, 0, 0, 0)
-     * (arity 3, first key NaN, last key NaN)
+     * (admin, noscript, stale)
+     * (arity 3, first key 0, last key 0)
      *
      * Make the server a replica of another instance, or promote it as master. Deprecated starting with Redis 5. Use REPLICAOF instead.
      *
@@ -5873,21 +5873,21 @@ class AbstractCommands
      */
     slaveof(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "SLAVEOF", arg0, arg1]);
+            return this._p([0x0, "SLAVEOF", arg0, arg1]);
         }
         else
         {
-            this._cc([0x0, "SLAVEOF", arg0, arg1, callback]);
+            this._c([0x0, "SLAVEOF", arg0, arg1, callback]);
         }
     }
 
     /**
      * SLOWLOG subcommand [argument]
      *
-     * (admin, random, loading, stale, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (admin, random, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Manages the Redis slow queries log.
      *
@@ -5925,14 +5925,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SMEMBERS key
      *
-     * (readonly, sort_for_script, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, sort_for_script)
+     * (arity 2, first key 1, last key 1)
      *
      * Get all the members in a set.
      *
@@ -5943,21 +5943,21 @@ class AbstractCommands
      */
     smembers(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "SMEMBERS", arg0]);
+            return this._p([0x10001, "SMEMBERS", arg0]);
         }
         else
         {
-            this._cc([0x10000, "SMEMBERS", arg0, callback]);
+            this._c([0x10001, "SMEMBERS", arg0, callback]);
         }
     }
 
     /**
      * SMOVE source destination member
      *
-     * (write, fast, 1, 2, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 4, first key 1, last key 2)
      *
      * Move a member from one set to another.
      *
@@ -5979,7 +5979,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SMOVE";
                 for(let n = 0; n < len; n++)
                 {
@@ -5987,14 +5987,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SORT key [BY pattern] [LIMIT offset count] [GET pattern [GET pattern ...]] [ASC|DESC] [ALPHA] [STORE destination]
      *
-     * (write, denyoom, movablekeys, 1, 1, 1, @write, @set, @sortedset)
-     * (arity -2, first key NaN, last key NaN)
+     * (write, denyoom, movablekeys)
+     * (arity -2, first key 1, last key 1)
      *
      * Sort the elements in a list, set or sorted set.
      *
@@ -6013,18 +6013,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "SORT", arguments[0]];
+                args = [0x20001, "SORT", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "SORT", arguments[0], arguments[1]];
+                args = [0x20001, "SORT", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SORT";
                 for(let n = 0; n < len; n++)
                 {
@@ -6032,14 +6032,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SPOP key [count]
      *
-     * (write, random, fast, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (write, random, fast)
+     * (arity -2, first key 1, last key 1)
      *
      * Remove and return one or multiple random members from a set.
      *
@@ -6058,18 +6058,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "SPOP", arguments[0]];
+                args = [0x20001, "SPOP", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "SPOP", arguments[0], arguments[1]];
+                args = [0x20001, "SPOP", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SPOP";
                 for(let n = 0; n < len; n++)
                 {
@@ -6077,14 +6077,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SRANDMEMBER key [count]
      *
-     * (readonly, random, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity -2, first key 1, last key 1)
      *
      * Get one or multiple random members from a set.
      *
@@ -6103,18 +6103,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "SRANDMEMBER", arguments[0]];
+                args = [0x10001, "SRANDMEMBER", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "SRANDMEMBER", arguments[0], arguments[1]];
+                args = [0x10001, "SRANDMEMBER", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "SRANDMEMBER";
                 for(let n = 0; n < len; n++)
                 {
@@ -6122,14 +6122,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SREM key member [member ...]
      *
-     * (write, fast, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity -3, first key 1, last key 1)
      *
      * Remove one or more members from a set.
      *
@@ -6149,13 +6149,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "SREM", arguments[0], arguments[1]];
+                args = [0x20001, "SREM", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SREM";
                 for(let n = 0; n < len; n++)
                 {
@@ -6163,14 +6163,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SSCAN key cursor [MATCH pattern] [COUNT count]
      *
-     * (readonly, random, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity -3, first key 1, last key 1)
      *
      * Incrementally iterate Set elements.
      *
@@ -6190,13 +6190,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x10000, "SSCAN", arguments[0], arguments[1]];
+                args = [0x10001, "SSCAN", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "SSCAN";
                 for(let n = 0; n < len; n++)
                 {
@@ -6204,14 +6204,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * STRALGO LCS algo-specific-argument [algo-specific-argument ...]
      *
-     * (readonly, movablekeys, 0, 0, 0)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, movablekeys)
+     * (arity -2, first key 0, last key 0)
      *
      * Run algorithms (currently LCS) against strings.
      *
@@ -6249,14 +6249,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * STRLEN key
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Get the length of the value stored in a key.
      *
@@ -6267,21 +6267,21 @@ class AbstractCommands
      */
     strlen(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "STRLEN", arg0]);
+            return this._p([0x10001, "STRLEN", arg0]);
         }
         else
         {
-            this._cc([0x10000, "STRLEN", arg0, callback]);
+            this._c([0x10001, "STRLEN", arg0, callback]);
         }
     }
 
     /**
      * SUBSCRIBE channel [channel ...]
      *
-     * (pubsub, noscript, loading, stale, 0, 0)
-     * (arity -2, first key 0, last key NaN)
+     * (pubsub, noscript, loading, stale)
+     * (arity -2, first key 0, last key 0)
      *
      * Listen for messages published to the given channels.
      *
@@ -6319,14 +6319,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SUBSTR key arg arg 
      *
-     * (readonly, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity 4, first key 1, last key 1)
      *
      * Help not available.
      *
@@ -6348,7 +6348,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "SUBSTR";
                 for(let n = 0; n < len; n++)
                 {
@@ -6356,14 +6356,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SUNION key [key ...]
      *
-     * (readonly, sort_for_script, 1, -1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, sort_for_script)
+     * (arity -2, first key 1, last key -1)
      *
      * Add multiple sets.
      *
@@ -6382,18 +6382,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "SUNION", arguments[0]];
+                args = [0x10001, "SUNION", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "SUNION", arguments[0], arguments[1]];
+                args = [0x10001, "SUNION", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "SUNION";
                 for(let n = 0; n < len; n++)
                 {
@@ -6401,14 +6401,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SUNIONSTORE destination key [key ...]
      *
-     * (write, denyoom, 1, -1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -3, first key 1, last key -1)
      *
      * Add multiple sets and store the resulting set in a key.
      *
@@ -6428,13 +6428,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "SUNIONSTORE", arguments[0], arguments[1]];
+                args = [0x20001, "SUNIONSTORE", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "SUNIONSTORE";
                 for(let n = 0; n < len; n++)
                 {
@@ -6442,14 +6442,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * SWAPDB index1 index2
      *
-     * (write, fast, 0, 0, 0, @keyspace)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity 3, first key 0, last key 0)
      *
      * Swaps two Redis databases.
      *
@@ -6461,21 +6461,21 @@ class AbstractCommands
      */
     swapdb(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "SWAPDB", arg0, arg1]);
+            return this._p([0x20000, "SWAPDB", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "SWAPDB", arg0, arg1, callback]);
+            this._c([0x20000, "SWAPDB", arg0, arg1, callback]);
         }
     }
 
     /**
      * SYNC -
      *
-     * (admin, noscript, 0, 0, 0)
-     * (arity 1, first key NaN, last key NaN)
+     * (admin, noscript)
+     * (arity 1, first key 0, last key 0)
      *
      * Internal command used for replication.
      *
@@ -6485,21 +6485,21 @@ class AbstractCommands
      */
     sync(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "SYNC"]);
+            return this._p([0x0, "SYNC"]);
         }
         else
         {
-            this._cc([0x0, "SYNC", callback]);
+            this._c([0x0, "SYNC", callback]);
         }
     }
 
     /**
      * TIME -
      *
-     * (readonly, random, loading, stale, fast, 0, 0)
-     * (arity 1, first key 0, last key NaN)
+     * (readonly, random, loading, stale, fast)
+     * (arity 1, first key 0, last key 0)
      *
      * Return the current server time.
      *
@@ -6509,21 +6509,21 @@ class AbstractCommands
      */
     time(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "TIME"]);
+            return this._p([0x10000, "TIME"]);
         }
         else
         {
-            this._cc([0x10000, "TIME", callback]);
+            this._c([0x10000, "TIME", callback]);
         }
     }
 
     /**
      * TOUCH key [key ...]
      *
-     * (readonly, fast, 1, -1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity -2, first key 1, last key -1)
      *
      * Alters the last access time of a key(s). Returns the number of existing keys specified.
      *
@@ -6542,18 +6542,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "TOUCH", arguments[0]];
+                args = [0x10001, "TOUCH", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "TOUCH", arguments[0], arguments[1]];
+                args = [0x10001, "TOUCH", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "TOUCH";
                 for(let n = 0; n < len; n++)
                 {
@@ -6561,14 +6561,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * TTL key
      *
-     * (readonly, random, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, random, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Get the time to live for a key.
      *
@@ -6579,21 +6579,21 @@ class AbstractCommands
      */
     ttl(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "TTL", arg0]);
+            return this._p([0x10001, "TTL", arg0]);
         }
         else
         {
-            this._cc([0x10000, "TTL", arg0, callback]);
+            this._c([0x10001, "TTL", arg0, callback]);
         }
     }
 
     /**
      * TYPE key
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Determine the type stored at key.
      *
@@ -6604,21 +6604,21 @@ class AbstractCommands
      */
     type(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "TYPE", arg0]);
+            return this._p([0x10001, "TYPE", arg0]);
         }
         else
         {
-            this._cc([0x10000, "TYPE", arg0, callback]);
+            this._c([0x10001, "TYPE", arg0, callback]);
         }
     }
 
     /**
      * UNLINK key [key ...]
      *
-     * (write, fast, 1, -1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity -2, first key 1, last key -1)
      *
      * Delete a key asynchronously in another thread. Otherwise it is just as DEL, but non blocking.
      *
@@ -6637,18 +6637,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "UNLINK", arguments[0]];
+                args = [0x20001, "UNLINK", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "UNLINK", arguments[0], arguments[1]];
+                args = [0x20001, "UNLINK", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "UNLINK";
                 for(let n = 0; n < len; n++)
                 {
@@ -6656,14 +6656,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * UNSUBSCRIBE [channel [channel ...]]
      *
-     * (pubsub, noscript, loading, stale, 0, 0)
-     * (arity -1, first key 0, last key NaN)
+     * (pubsub, noscript, loading, stale)
+     * (arity -1, first key 0, last key 0)
      *
      * Stop listening for messages posted to the given channels.
      *
@@ -6702,14 +6702,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * UNWATCH -
      *
-     * (noscript, fast, 0, 0)
-     * (arity 1, first key 0, last key NaN)
+     * (noscript, fast)
+     * (arity 1, first key 0, last key 0)
      *
      * Forget about all watched keys.
      *
@@ -6719,21 +6719,21 @@ class AbstractCommands
      */
     unwatch(callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "UNWATCH"]);
+            return this._p([0x0, "UNWATCH"]);
         }
         else
         {
-            this._cc([0x0, "UNWATCH", callback]);
+            this._c([0x0, "UNWATCH", callback]);
         }
     }
 
     /**
      * WAIT numreplicas timeout
      *
-     * (noscript, 0, 0)
-     * (arity 3, first key 0, last key NaN)
+     * (noscript)
+     * (arity 3, first key 0, last key 0)
      *
      * Wait for the synchronous replication of all the write commands sent in the context of the current connection.
      *
@@ -6745,21 +6745,21 @@ class AbstractCommands
      */
     wait(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x0, "WAIT", arg0, arg1]);
+            return this._p([0x0, "WAIT", arg0, arg1]);
         }
         else
         {
-            this._cc([0x0, "WAIT", arg0, arg1, callback]);
+            this._c([0x0, "WAIT", arg0, arg1, callback]);
         }
     }
 
     /**
      * WATCH key [key ...]
      *
-     * (noscript, fast, 1, -1)
-     * (arity -2, first key 1, last key NaN)
+     * (noscript, fast)
+     * (arity -2, first key 1, last key -1)
      *
      * Watch the given keys to determine execution of the MULTI/EXEC block.
      *
@@ -6797,14 +6797,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XACK key group ID [ID ...]
      *
-     * (write, random, fast, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (write, random, fast)
+     * (arity -4, first key 1, last key 1)
      *
      * Marks a pending message as correctly processed, effectively removing it from the pending entries list of the consumer group. Return value of the command is the number of messages successfully acknowledged, that is, the IDs we were actually able to resolve in the PEL.
      *
@@ -6826,7 +6826,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "XACK";
                 for(let n = 0; n < len; n++)
                 {
@@ -6834,14 +6834,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XADD key ID field value [field value ...]
      *
-     * (write, denyoom, random, fast, 1, 1, 1)
-     * (arity -5, first key NaN, last key NaN)
+     * (write, denyoom, random, fast)
+     * (arity -5, first key 1, last key 1)
      *
      * Appends a new entry to a stream.
      *
@@ -6864,7 +6864,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "XADD";
                 for(let n = 0; n < len; n++)
                 {
@@ -6872,14 +6872,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XCLAIM key group consumer min-idle-time ID [ID ...] [IDLE ms] [TIME ms-unix-time] [RETRYCOUNT count] [force] [justid]
      *
-     * (write, random, fast, 1, 1, 1)
-     * (arity -6, first key NaN, last key NaN)
+     * (write, random, fast)
+     * (arity -6, first key 1, last key 1)
      *
      * Changes (or acquires) ownership of a message in a consumer group, as if the message was delivered to the specified consumer.
      *
@@ -6903,7 +6903,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "XCLAIM";
                 for(let n = 0; n < len; n++)
                 {
@@ -6911,14 +6911,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XDEL key ID [ID ...]
      *
-     * (write, fast, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity -3, first key 1, last key 1)
      *
      * Removes the specified entries from the stream. Returns the number of items actually deleted, that may be different from the number of IDs passed in case certain IDs do not exist.
      *
@@ -6938,13 +6938,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "XDEL", arguments[0], arguments[1]];
+                args = [0x20001, "XDEL", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "XDEL";
                 for(let n = 0; n < len; n++)
                 {
@@ -6952,14 +6952,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XGROUP [CREATE key groupname id-or-$] [SETID key groupname id-or-$] [DESTROY key groupname] [DELCONSUMER key groupname consumername]
      *
-     * (write, denyoom, 2, 2, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (write, denyoom)
+     * (arity -2, first key 2, last key 2)
      *
      * Create, destroy, and manage consumer groups.
      *
@@ -6978,18 +6978,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "XGROUP", arguments[0]];
+                args = [0x20002, "XGROUP", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "XGROUP", arguments[0], arguments[1]];
+                args = [0x20002, "XGROUP", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20002;
                 args[1] = "XGROUP";
                 for(let n = 0; n < len; n++)
                 {
@@ -6997,14 +6997,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XINFO [CONSUMERS key groupname] [GROUPS key] [STREAM key] [HELP]
      *
-     * (readonly, random, 2, 2, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity -2, first key 2, last key 2)
      *
      * Get information on streams and consumer groups.
      *
@@ -7023,18 +7023,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x10000, "XINFO", arguments[0]];
+                args = [0x10002, "XINFO", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x10000, "XINFO", arguments[0], arguments[1]];
+                args = [0x10002, "XINFO", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10002;
                 args[1] = "XINFO";
                 for(let n = 0; n < len; n++)
                 {
@@ -7042,14 +7042,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XLEN key
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Return the number of entires in a stream.
      *
@@ -7060,21 +7060,21 @@ class AbstractCommands
      */
     xlen(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "XLEN", arg0]);
+            return this._p([0x10001, "XLEN", arg0]);
         }
         else
         {
-            this._cc([0x10000, "XLEN", arg0, callback]);
+            this._c([0x10001, "XLEN", arg0, callback]);
         }
     }
 
     /**
      * XPENDING key group [start end count] [consumer]
      *
-     * (readonly, random, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity -3, first key 1, last key 1)
      *
      * Return information and entries from a stream consumer group pending entries list, that are messages fetched but never acknowledged.
      *
@@ -7094,13 +7094,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x10000, "XPENDING", arguments[0], arguments[1]];
+                args = [0x10001, "XPENDING", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "XPENDING";
                 for(let n = 0; n < len; n++)
                 {
@@ -7108,14 +7108,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XRANGE key start end [COUNT count]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -4, first key 1, last key 1)
      *
      * Return a range of elements in a stream, with IDs matching the specified IDs interval.
      *
@@ -7137,7 +7137,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "XRANGE";
                 for(let n = 0; n < len; n++)
                 {
@@ -7145,14 +7145,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XREAD [COUNT count] [BLOCK milliseconds] STREAMS key [key ...] id [id ...]
      *
-     * (readonly, movablekeys, 1, 1, 1, @read)
-     * (arity -4, first key NaN, last key NaN)
+     * (readonly, movablekeys)
+     * (arity -4, first key 1, last key 1)
      *
      * Return never seen elements in multiple streams, with IDs greater than the ones reported by the caller for each stream. Can block.
      *
@@ -7174,7 +7174,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "XREAD";
                 for(let n = 0; n < len; n++)
                 {
@@ -7182,14 +7182,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREAMS key [key ...] ID [ID ...]
      *
-     * (write, movablekeys, 1, 1, 1, @write)
-     * (arity -7, first key NaN, last key NaN)
+     * (write, movablekeys)
+     * (arity -7, first key 1, last key 1)
      *
      * Return new entries from a stream using a consumer group, or access the history of the pending entries for a given consumer. Can block.
      *
@@ -7214,7 +7214,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "XREADGROUP";
                 for(let n = 0; n < len; n++)
                 {
@@ -7222,14 +7222,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XREVRANGE key end start [COUNT count]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -4, first key 1, last key 1)
      *
      * Return a range of elements in a stream, with IDs matching the specified IDs interval, in reverse order (from greater to smaller IDs) compared to XRANGE.
      *
@@ -7251,7 +7251,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "XREVRANGE";
                 for(let n = 0; n < len; n++)
                 {
@@ -7259,14 +7259,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * XSETID key arg 
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Help not available.
      *
@@ -7278,21 +7278,21 @@ class AbstractCommands
      */
     xsetid(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x20000, "XSETID", arg0, arg1]);
+            return this._p([0x20001, "XSETID", arg0, arg1]);
         }
         else
         {
-            this._cc([0x20000, "XSETID", arg0, arg1, callback]);
+            this._c([0x20001, "XSETID", arg0, arg1, callback]);
         }
     }
 
     /**
      * XTRIM key MAXLEN [~] count
      *
-     * (write, random, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (write, random)
+     * (arity -2, first key 1, last key 1)
      *
      * Trims the stream to (approximately if '~' is passed) a certain size.
      *
@@ -7311,18 +7311,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "XTRIM", arguments[0]];
+                args = [0x20001, "XTRIM", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "XTRIM", arguments[0], arguments[1]];
+                args = [0x20001, "XTRIM", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "XTRIM";
                 for(let n = 0; n < len; n++)
                 {
@@ -7330,14 +7330,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZADD key [NX|XX] [CH] [INCR] score member [score member ...]
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity -4, first key 1, last key 1)
      *
      * Add one or more members to a sorted set, or update its score if it already exists.
      *
@@ -7359,7 +7359,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "ZADD";
                 for(let n = 0; n < len; n++)
                 {
@@ -7367,14 +7367,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZCARD key
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 2, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 2, first key 1, last key 1)
      *
      * Get the number of members in a sorted set.
      *
@@ -7385,21 +7385,21 @@ class AbstractCommands
      */
     zcard(arg0, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "ZCARD", arg0]);
+            return this._p([0x10001, "ZCARD", arg0]);
         }
         else
         {
-            this._cc([0x10000, "ZCARD", arg0, callback]);
+            this._c([0x10001, "ZCARD", arg0, callback]);
         }
     }
 
     /**
      * ZCOUNT key min max
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 4, first key 1, last key 1)
      *
      * Count the members in a sorted set with scores within the given values.
      *
@@ -7421,7 +7421,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "ZCOUNT";
                 for(let n = 0; n < len; n++)
                 {
@@ -7429,14 +7429,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZINCRBY key increment member
      *
-     * (write, denyoom, fast, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write, denyoom, fast)
+     * (arity 4, first key 1, last key 1)
      *
      * Increment the score of a member in a sorted set.
      *
@@ -7458,7 +7458,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "ZINCRBY";
                 for(let n = 0; n < len; n++)
                 {
@@ -7466,14 +7466,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZINTERSTORE destination numkeys key [key ...] [WEIGHTS weight] [AGGREGATE SUM|MIN|MAX]
      *
-     * (write, denyoom, movablekeys, 0, 0, 0)
-     * (arity -4, first key NaN, last key NaN)
+     * (write, denyoom, movablekeys)
+     * (arity -4, first key 0, last key 0)
      *
      * Intersect multiple sorted sets and store the resulting sorted set in a new key.
      *
@@ -7503,14 +7503,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZLEXCOUNT key min max
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 4, first key 1, last key 1)
      *
      * Count the number of members in a sorted set between a given lexicographical range.
      *
@@ -7532,7 +7532,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "ZLEXCOUNT";
                 for(let n = 0; n < len; n++)
                 {
@@ -7540,14 +7540,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZPOPMAX key [count]
      *
-     * (write, fast, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity -2, first key 1, last key 1)
      *
      * Remove and return members with the highest scores in a sorted set.
      *
@@ -7566,18 +7566,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "ZPOPMAX", arguments[0]];
+                args = [0x20001, "ZPOPMAX", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "ZPOPMAX", arguments[0], arguments[1]];
+                args = [0x20001, "ZPOPMAX", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "ZPOPMAX";
                 for(let n = 0; n < len; n++)
                 {
@@ -7585,14 +7585,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZPOPMIN key [count]
      *
-     * (write, fast, 1, 1, 1)
-     * (arity -2, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity -2, first key 1, last key 1)
      *
      * Remove and return members with the lowest scores in a sorted set.
      *
@@ -7611,18 +7611,18 @@ class AbstractCommands
             }
             case 1:
             {
-                args = [0x20000, "ZPOPMIN", arguments[0]];
+                args = [0x20001, "ZPOPMIN", arguments[0]];
                 break;
             }
             case 2:
             {
-                args = [0x20000, "ZPOPMIN", arguments[0], arguments[1]];
+                args = [0x20001, "ZPOPMIN", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "ZPOPMIN";
                 for(let n = 0; n < len; n++)
                 {
@@ -7630,14 +7630,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZRANGE key start stop [WITHSCORES]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -4, first key 1, last key 1)
      *
      * Return a range of members in a sorted set, by index.
      *
@@ -7659,7 +7659,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "ZRANGE";
                 for(let n = 0; n < len; n++)
                 {
@@ -7667,14 +7667,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZRANGEBYLEX key min max [LIMIT offset count]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -4, first key 1, last key 1)
      *
      * Return a range of members in a sorted set, by lexicographical range.
      *
@@ -7696,7 +7696,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "ZRANGEBYLEX";
                 for(let n = 0; n < len; n++)
                 {
@@ -7704,14 +7704,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT offset count]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -4, first key 1, last key 1)
      *
      * Return a range of members in a sorted set, by score.
      *
@@ -7733,7 +7733,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "ZRANGEBYSCORE";
                 for(let n = 0; n < len; n++)
                 {
@@ -7741,14 +7741,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZRANK key member
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Determine the index of a member in a sorted set.
      *
@@ -7760,21 +7760,21 @@ class AbstractCommands
      */
     zrank(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "ZRANK", arg0, arg1]);
+            return this._p([0x10001, "ZRANK", arg0, arg1]);
         }
         else
         {
-            this._cc([0x10000, "ZRANK", arg0, arg1, callback]);
+            this._c([0x10001, "ZRANK", arg0, arg1, callback]);
         }
     }
 
     /**
      * ZREM key member [member ...]
      *
-     * (write, fast, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (write, fast)
+     * (arity -3, first key 1, last key 1)
      *
      * Remove one or more members from a sorted set.
      *
@@ -7794,13 +7794,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x20000, "ZREM", arguments[0], arguments[1]];
+                args = [0x20001, "ZREM", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "ZREM";
                 for(let n = 0; n < len; n++)
                 {
@@ -7808,14 +7808,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZREMRANGEBYLEX key min max
      *
-     * (write, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write)
+     * (arity 4, first key 1, last key 1)
      *
      * Remove all members in a sorted set between the given lexicographical range.
      *
@@ -7837,7 +7837,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "ZREMRANGEBYLEX";
                 for(let n = 0; n < len; n++)
                 {
@@ -7845,14 +7845,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZREMRANGEBYRANK key start stop
      *
-     * (write, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write)
+     * (arity 4, first key 1, last key 1)
      *
      * Remove all members in a sorted set within the given indexes.
      *
@@ -7874,7 +7874,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "ZREMRANGEBYRANK";
                 for(let n = 0; n < len; n++)
                 {
@@ -7882,14 +7882,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZREMRANGEBYSCORE key min max
      *
-     * (write, 1, 1, 1)
-     * (arity 4, first key NaN, last key NaN)
+     * (write)
+     * (arity 4, first key 1, last key 1)
      *
      * Remove all members in a sorted set within the given scores.
      *
@@ -7911,7 +7911,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x20000;
+                args[0] = 0x20001;
                 args[1] = "ZREMRANGEBYSCORE";
                 for(let n = 0; n < len; n++)
                 {
@@ -7919,14 +7919,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZREVRANGE key start stop [WITHSCORES]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -4, first key 1, last key 1)
      *
      * Return a range of members in a sorted set, by index, with scores ordered from high to low.
      *
@@ -7948,7 +7948,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "ZREVRANGE";
                 for(let n = 0; n < len; n++)
                 {
@@ -7956,14 +7956,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZREVRANGEBYLEX key max min [LIMIT offset count]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -4, first key 1, last key 1)
      *
      * Return a range of members in a sorted set, by lexicographical range, ordered from higher to lower strings.
      *
@@ -7985,7 +7985,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "ZREVRANGEBYLEX";
                 for(let n = 0; n < len; n++)
                 {
@@ -7993,14 +7993,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZREVRANGEBYSCORE key max min [WITHSCORES] [LIMIT offset count]
      *
-     * (readonly, 1, 1, 1)
-     * (arity -4, first key NaN, last key NaN)
+     * (readonly)
+     * (arity -4, first key 1, last key 1)
      *
      * Return a range of members in a sorted set, by score, with scores ordered from high to low.
      *
@@ -8022,7 +8022,7 @@ class AbstractCommands
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "ZREVRANGEBYSCORE";
                 for(let n = 0; n < len; n++)
                 {
@@ -8030,14 +8030,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZREVRANK key member
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Determine the index of a member in a sorted set, with scores ordered from high to low.
      *
@@ -8049,21 +8049,21 @@ class AbstractCommands
      */
     zrevrank(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "ZREVRANK", arg0, arg1]);
+            return this._p([0x10001, "ZREVRANK", arg0, arg1]);
         }
         else
         {
-            this._cc([0x10000, "ZREVRANK", arg0, arg1, callback]);
+            this._c([0x10001, "ZREVRANK", arg0, arg1, callback]);
         }
     }
 
     /**
      * ZSCAN key cursor [MATCH pattern] [COUNT count]
      *
-     * (readonly, random, 1, 1, 1)
-     * (arity -3, first key NaN, last key NaN)
+     * (readonly, random)
+     * (arity -3, first key 1, last key 1)
      *
      * Incrementally iterate sorted sets elements and associated scores.
      *
@@ -8083,13 +8083,13 @@ class AbstractCommands
             }
             case 2:
             {
-                args = [0x10000, "ZSCAN", arguments[0], arguments[1]];
+                args = [0x10001, "ZSCAN", arguments[0], arguments[1]];
                 break;
             }
             default:
             {
                 args = new Array(len + 2);
-                args[0] = 0x10000;
+                args[0] = 0x10001;
                 args[1] = "ZSCAN";
                 for(let n = 0; n < len; n++)
                 {
@@ -8097,14 +8097,14 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 
     /**
      * ZSCORE key member
      *
-     * (readonly, fast, 1, 1, 1)
-     * (arity 3, first key NaN, last key NaN)
+     * (readonly, fast)
+     * (arity 3, first key 1, last key 1)
      *
      * Get the score associated with the given member in a sorted set.
      *
@@ -8116,21 +8116,21 @@ class AbstractCommands
      */
     zscore(arg0, arg1, callback)
     {
-        if(callback === void(0))
+        if(callback === void null)
         {
-            return this._cp([0x10000, "ZSCORE", arg0, arg1]);
+            return this._p([0x10001, "ZSCORE", arg0, arg1]);
         }
         else
         {
-            this._cc([0x10000, "ZSCORE", arg0, arg1, callback]);
+            this._c([0x10001, "ZSCORE", arg0, arg1, callback]);
         }
     }
 
     /**
      * ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight] [AGGREGATE SUM|MIN|MAX]
      *
-     * (write, denyoom, movablekeys, 0, 0, 0)
-     * (arity -4, first key NaN, last key NaN)
+     * (write, denyoom, movablekeys)
+     * (arity -4, first key 0, last key 0)
      *
      * Add multiple sorted sets and store the resulting sorted set in a new key.
      *
@@ -8160,7 +8160,7 @@ class AbstractCommands
                 }
             }
         }
-        return this._c(args);
+        return this._r(args);
     }
 }
 

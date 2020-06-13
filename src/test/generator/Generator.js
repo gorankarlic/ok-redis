@@ -78,10 +78,11 @@ for(let commands of map.values())
     let info = child_process.execSync("redis-cli --raw COMMAND INFO " + name, opts);
     let infos = info.toString().split("\n");
     let arity = Number(infos[1]);
-    let modes = infos.slice(2, infos.length - 4);
+    let length = infos.findIndex((s) => s.startsWith("@"));
+    let modes = infos.slice(2, length - 3);
     let rw;
-    let index = Number(infos[infos.length - 4]);
-    let index2 = Number(infos[infos.length - 3]);
+    let index = Number(infos[length - 3]);
+    let index2 = Number(infos[length - 2]);
     if(modes.indexOf("admin") !== -1)
     {
         rw = 0;
@@ -103,13 +104,13 @@ for(let commands of map.values())
     + "\n * @param {Function} callback the function to call when done.";
     let commandArg0 = "(callback)"
     + "\n{"
-    + "\n    if(callback === void(0))"
+    + "\n    if(callback === void null)"
     + "\n    {"
-    + "\n        return this._cp([" + flags + ", \"" + name + "\"]);"
+    + "\n        return this._p([" + flags + ", \"" + name + "\"]);"
     + "\n    }"
     + "\n    else"
     + "\n    {"
-    + "\n        this._cc([" + flags + ", \"" + name + "\", callback]);"
+    + "\n        this._c([" + flags + ", \"" + name + "\", callback]);"
     + "\n    }"
     + "\n}";
 
@@ -118,13 +119,13 @@ for(let commands of map.values())
     + "\n * @param {Function} callback the function to call when done.";
     let commandArg1 = "(arg0, callback)"
     + "\n{"
-    + "\n    if(callback === void(0))"
+    + "\n    if(callback === void null)"
     + "\n    {"
-    + "\n        return this._cp([" + flags + ", \"" + name + "\", arg0]);"
+    + "\n        return this._p([" + flags + ", \"" + name + "\", arg0]);"
     + "\n    }"
     + "\n    else"
     + "\n    {"
-    + "\n        this._cc([" + flags + ", \"" + name + "\", arg0, callback]);"
+    + "\n        this._c([" + flags + ", \"" + name + "\", arg0, callback]);"
     + "\n    }"
     + "\n}";
 
@@ -134,13 +135,13 @@ for(let commands of map.values())
     + "\n * @param {Function} callback the function to call when done.";
     let commandArg2 = "(arg0, arg1, callback)"
     + "\n{"
-    + "\n    if(callback === void(0))"
+    + "\n    if(callback === void null)"
     + "\n    {"
-    + "\n        return this._cp([" + flags + ", \"" + name + "\", arg0, arg1]);"
+    + "\n        return this._p([" + flags + ", \"" + name + "\", arg0, arg1]);"
     + "\n    }"
     + "\n    else"
     + "\n    {"
-    + "\n        this._cc([" + flags + ", \"" + name + "\", arg0, arg1, callback]);"
+    + "\n        this._c([" + flags + ", \"" + name + "\", arg0, arg1, callback]);"
     + "\n    }"
     + "\n}";
 
@@ -204,7 +205,7 @@ for(let commands of map.values())
     + "\n            }"
     + "\n        }"
     + "\n    }"
-    + "\n    return this._c(args);"
+    + "\n    return this._r(args);"
     + "\n}";
 
     let paramsImpl;
