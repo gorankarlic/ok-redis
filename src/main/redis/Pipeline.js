@@ -1,13 +1,12 @@
 "use strict";
 
-const Commands = require("./Commands");
-const Deque = require("../util/Deque");
+const Batch = require("./Batch");
 const RespWriter = require("./RespWriter");
 
 /**
  * Redis pipeline operation.
  */
-class Pipeline extends Commands
+class Pipeline extends Batch
 {
     /**
      * Creates a new instance of this class.
@@ -17,9 +16,7 @@ class Pipeline extends Commands
     constructor(client)
     {
         super(client);
-        this._client = client;
         this._callback = this._reply.bind(this);
-        this._queue = new Deque();
         this._errors = null;
         this._replies = [];
     }
@@ -47,6 +44,18 @@ class Pipeline extends Commands
         this._queue.addLast(args);
     }
 
+    _exec(callback)
+    {
+        this._queue.addLast([0, "PING", () =>
+        {
+            callback(this._error, this._replies);
+            this._error = null;
+            this._replies = null;
+        }]);
+        this._client.commandPipeline(this._queue);
+        this._queue = null;
+    }
+
     /**
      * Called when a single batch command replies.
      *
@@ -57,47 +66,6 @@ class Pipeline extends Commands
     {
         this._error = this.error || err;
         this._replies.push(reply);
-    }
-
-    /**
-     * Executes this batch.
-     *
-     * @param {Function} callback the function to be called when done.
-     */
-    exec(callback)
-    {
-        if(callback === void null)
-        {
-            return new Promise((resolve, reject) =>
-            {
-                this._queue.addLast([0, "PING", () =>
-                {
-                    if(this._error)
-                    {
-                        reject(this._error);
-                    }
-                    else
-                    {
-                        resolve(this._replies);
-                    }
-                    this._error = null;
-                    this._replies = null;
-                }]);
-                this._client.commandPipeline(this._queue);
-                this._queue = null;
-            });
-        }
-        else
-        {
-            this._queue.addLast([0, "PING", () =>
-            {
-                callback(this._error, this._replies);
-                this._error = null;
-                this._replies = null;
-            }]);
-            this._client.commandPipeline(this._queue);
-            this._queue = null;
-        }
     }
 }
 
