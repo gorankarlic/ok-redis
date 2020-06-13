@@ -105,8 +105,8 @@ class Client
     connect(done)
     {
         this.reconnect = null;
-        this.socket.connect(this.opts, () => done(null));
-        this.socket.once("error", done);
+        this.socket.connect(this.opts, () => done === void null ? void null : done(null));
+        this.socket.once("error", (err) => done === void null ? void null : done(err));
     }
 
     /**
