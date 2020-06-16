@@ -782,4 +782,4 @@ class MultiString extends Multi
     }
 }
 
-module.exports = {RespReader};
+module.exports = RespReader;

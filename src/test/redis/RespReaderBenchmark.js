@@ -1,7 +1,7 @@
 "use strict";
 
 const RespBuffer = require("../../main/redis/RespBuffer");
-const {RespReader} = require("../../main/redis/RespReader");
+const RespReader = require("../../main/redis/RespReader");
 
 suite("RespReader", function()
 {

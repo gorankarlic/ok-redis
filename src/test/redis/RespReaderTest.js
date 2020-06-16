@@ -7,7 +7,7 @@ const RedisLoadingError = require("../../main/redis/RedisLoadingError");
 const RedisMovedError = require("../../main/redis/RedisMovedError");
 const RedisTryAgainError = require("../../main/redis/RedisTryAgainError");
 const RespBuffer = require("../../main/redis/RespBuffer");
-const {RespReader} = require("../../main/redis/RespReader");
+const RespReader = require("../../main/redis/RespReader");
 
 describe("RespReader", function()
 {
@@ -59,7 +59,7 @@ describe("RespReader", function()
         {
             assert.throws(() => test("="), /^Error: invalid RESP type$/);
         });
-        
+
         it("read queued", function()
         {
             testFragmented("+", 2, void null);
@@ -334,17 +334,17 @@ describe("RespReader", function()
             testFragmented("+ERR\r", 1, void null);
             testFragmented("\n", 0, "ERR");
         });
-        
+
         it("read OK", function()
         {
             test("+OK\r\n", "OK");
         });
-        
+
         it("read PONG", function()
         {
             test("+PONG\r\n", "PONG");
         });
-        
+
         it("read QUEUED", function()
         {
             test("+QUEUED\r\n", "QUEUED");
@@ -358,33 +358,33 @@ describe("RespReader", function()
         {
             test("-\r\n", new RedisError(""));
         });
-        
+
         it("read error", function()
         {
             test("-ERR test\r\n", new RedisError("ERR test"));
         });
-        
+
         it("read ASK error", function()
         {
             test("-ASK 12345 127.0.0.1:9876\r\n", new RedisAskError("ASK 12345 127.0.0.1:9876", 12345, "127.0.0.1", 9876));
         });
-        
+
         it("read LOADING error", function()
         {
             test("-LOADING test\r\n", new RedisLoadingError("LOADING test"));
         });
-        
+
         it("read MOVED error", function()
         {
             test("-MOVED 12345 127.0.0.1:9876\r\n", new RedisMovedError("MOVED 12345 127.0.0.1:9876", 12345, "127.0.0.1", 9876));
         });
-        
+
         it("read TRYAGAIN error", function()
         {
             test("-TRYAGAIN later\r\n", new RedisTryAgainError("TRYAGAIN later"));
         });
     });
-    
+
     describe("Numeral", function()
     {
         it("read 0 to 9", function()
