@@ -13,17 +13,16 @@ describe("Redis", async function()
         await client.quit();
     });
 
-    it("ping (callback)", async function()
+    it("ping (callback)", function(done)
     {
-        return new Promise(async (resolve) =>
+        const client = Redis.connect(Redis.opts(), (err, result) =>
         {
-            const client = await Redis.connect();
+            assert.strictEqual(err, null);
             client.ping(async (err, pong) =>
             {
                 assert.strictEqual(err, null);
                 assert.strictEqual(pong, "PONG");
-                await client.quit();
-                resolve();
+                client.quit(done);
             });
         });
     });
@@ -51,5 +50,23 @@ describe("Redis", async function()
         const list = await client.string().lrange("test", 0, 1);
         assert.deepStrictEqual(list, ["a", "b"]);
         await client.quit();
+    });
+
+    it("multi (callback)", function(done)
+    {
+        const client = Redis.connect(Redis.opts(), (err, result) =>
+        {
+            assert.strictEqual(err, null);
+            const multi = client.multi();
+            multi.del("a");
+            multi.lpush("a", "b");
+            multi.lrange("a", 0, 1);
+            multi.exec((err, result) =>
+            {
+                assert.strictEqual(err, null);
+                assert.deepStrictEqual(result, [1, 1, [Buffer.from("b")]]);
+                client.quit(done);
+            });
+        });
     });
 });

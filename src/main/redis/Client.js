@@ -3,7 +3,7 @@
 const net = require("net");
 const Deque = require("../util/Deque");
 const RespBuffer = require("./RespBuffer");
-const {RespReader, RespStringReader} = require("./RespReader");
+const RespReader = require("./RespReader");
 const RespWriter = require("./RespWriter");
 
 /**
@@ -33,12 +33,12 @@ class Client
         this.writer = new RespWriter();
 
         this.socket = new net.Socket();
+        this.socket.setNoDelay(true);
         this.socket.on("connect", this.onconnect.bind(this));
         this.socket.on("close", this.onclose.bind(this));
         this.socket.on("data", this.ondata.bind(this));
         this.socket.on("drain", this.ondrain.bind(this));
         this.socket.on("error", this.onerror.bind(this));
-        this.socket.setNoDelay(true);
     }
 
     /**
