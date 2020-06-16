@@ -65,17 +65,23 @@ async function run(runner, f)
     return [d / 1e9, n];
 }
 
-async function runSuite(name, after, before, bench)
+async function runSuite(only, name, after, before, bench)
 {
-    process.stdout.write(`\t${name}\n`);
+    process.stdout.write(`\t${only ? "Only run " : ""}${name}\n`);
     for(const f of before)
     {
         const runner = selectRunner(f);
         await runner(1, f);
     }
-    for(const [name, f] of bench)
+    let onlies = bench.filter(([only]) => only);
+    if(onlies.length === 0)
     {
-        process.stdout.write(`\t\t${name}\n`);
+        onlies = bench;
+    }
+    onlies = [...onlies, ...onlies];
+    for(const [only, name, f] of onlies)
+    {
+        process.stdout.write(`\t\t${only ? "Only run " : ""}${name}\n`);
         const runner = selectRunner(f);
         const [d, n] = await run(runner, f);
         const q = Math.round(n / d);
@@ -102,9 +108,17 @@ async function main(suites)
         await runCallback(1e6, (f) => f());
         await runSync(1e6, () => 1);
 
-        for(const suite of suites)
+        let onlies = suites.filter(([only]) => only);
+        if(onlies.length === 0)
         {
-            await runSuite(...suite);
+            onlies = suites1;
+        }
+        else
+        {
+            for(const suite of onlies)
+            {
+                await runSuite(...suite);
+            }
         }
     }
     catch(e)
@@ -114,18 +128,22 @@ async function main(suites)
     }
 }
 
-const suites = [];
-global.suite = async function(name, f)
+async function suite(only, name, f)
 {
     const after = [];
     const before = [];
     const bench = [];
     global.after = (f) => after.push(f);
     global.before = (f) => before.push(f);
-    global.bench = (name, f) => bench.push([name, f]);
-    suites.push([name, after, before, bench]);
+    global.bench = (name, f) => bench.push([false, name, f]);
+    global.bench.only = (name, f) => bench.push([true, name, f]);
+    suites.push([only, name, after, before, bench]);
     await f();
-};
+}
+
+const suites = [];
+global.suite = async (name, f) => await suite(false, name, f);
+global.suite.only = async (name, f) => await suite(true, name, f);
 
 const pattern = process.argv[process.argv.length - 1];
 const files = glob.sync(pattern);

@@ -1,13 +1,9 @@
 "use strict";
 
-var matcha = require("matcha");
-var Client = require("../../main/redis/Client");
-var redis = require("redis");
-
-suite('buffer', function()
+suite("Buffer", function()
 {
-    var buffer = Buffer.alloc(16);
-    var string = "END_123";
+    const buffer = Buffer.alloc(16);
+    const string = "END_123";
 
     bench("warmup", function(next)
     {
@@ -76,8 +72,8 @@ suite('buffer', function()
 
     bench("buffer.readUInt8", function()
     {
-        var s = 0;
-        for(var n = 0; n < buffer.length; n++)
+        let s = 0;
+        for(let n = 0; n < buffer.length; n++)
         {
             s += buffer.readUInt8(0);
         }
@@ -85,8 +81,8 @@ suite('buffer', function()
 
     bench("buffer[index]", function()
     {
-        var s = 0;
-        for(var n = 0; n < buffer.length; n++)
+        let s = 0;
+        for(let n = 0; n < buffer.length; n++)
         {
             s += buffer[n];
         }
@@ -94,7 +90,7 @@ suite('buffer', function()
 
     bench("buffer.copy", function()
     {
-        var b = Buffer.alloc(8);
+        const b = Buffer.alloc(8);
         buffer.copy(b, 0, 0, 8);
     });
 
@@ -125,14 +121,10 @@ suite('buffer', function()
 
     bench("buffer[index] = string[index]", function()
     {
-        var s = "*TEST";
-        for(var i = 0; i < s.length; i++)
+        const s = "*TEST";
+        for(let i = 0; i < s.length; i++)
         {
             buffer[i] = s.charCodeAt(i);
-        }
-        if(buffer[0] !== 0x2A)
-        {
-            console.log(buffer);
         }
     });
 });
