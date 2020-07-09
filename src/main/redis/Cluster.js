@@ -284,12 +284,15 @@ class Cluster
                 }
             }
         };
-        for(let nodeList of this.nodes.values())
+        if(this.nodes !== null)
         {
-            for(let n = 0; n < nodeList.length; n++)
+            for(let nodeList of this.nodes.values())
             {
-                nodeList[n].quit(ran);
-                runs++;
+                for(let n = 0; n < nodeList.length; n++)
+                {
+                    nodeList[n].quit(ran);
+                    runs++;
+                }
             }
         }
         this.client.quit(ran);

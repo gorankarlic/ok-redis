@@ -11,7 +11,7 @@
     "bench": "node src/test/Bench.js \"src/test/**/*Benchmark.js\"",
     "docs": "npx jsdoc -r src",
     "generator": "node src/test/generator/Generator.js",
-    "redis": "redis-server --save \"\" --appendonly no",
+    "redis": "redis-server --save \"\" --appendonly no --io-threads 4",
     "redis-build": "cd target && curl -o redis-6.0.3.tar.gz http://download.redis.io/releases/redis-6.0.3.tar.gz && tar xzf redis-6.0.3.tar.gz && cd redis-6.0.3 && make",
     "test": "npx nyc --all --exclude src/main/redis/AbstractCommands.js --include \"src/main/**/*.js\" --report-dir target/coverage --reporter html --reporter text --temp-dir target/.nyc_output -- npx mocha \"src/test/**/*Test.js\"",
     "test-only": "npx mocha \"src/test/**/*Test.js\""

@@ -48,8 +48,8 @@ class Client
      */
     command(args)
     {
-        this.queue.addLast(args);
         this.writer.write(args);
+        this.queue.addLast(args);
         this.cork();
     }
 

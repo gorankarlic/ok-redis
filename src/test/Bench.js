@@ -111,14 +111,11 @@ async function main(suites)
         let onlies = suites.filter(([only]) => only);
         if(onlies.length === 0)
         {
-            onlies = suites1;
+            onlies = suites;
         }
-        else
+        for(const suite of onlies)
         {
-            for(const suite of onlies)
-            {
-                await runSuite(...suite);
-            }
+            await runSuite(...suite);
         }
     }
     catch(e)

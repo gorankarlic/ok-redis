@@ -30,7 +30,7 @@ class RedisOpts
         return this;
     }
 
-    returnss(returns)
+    returns(returns)
     {
         this.opts.returns = returns;
         return this;
