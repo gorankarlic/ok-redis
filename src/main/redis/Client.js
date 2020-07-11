@@ -6,6 +6,9 @@ const RespBuffer = require("./RespBuffer");
 const RespReader = require("./RespReader");
 const RespWriter = require("./RespWriter");
 
+let terminate = false;
+process.on("uncaughtExceptionMonitor", () => terminate = true);
+
 /**
  * Creates a new instance of this class.
  *
@@ -116,7 +119,7 @@ class Client
     {
         this.ready = false;
         this.uncorked = true;
-        if(this.reconnect === true)
+        if(this.reconnect === true && terminate === false)
         {
             this.socket.connect(this.opts);
         }
@@ -231,8 +234,8 @@ class Client
     quit(done)
     {
         this.command([0, "QUIT", done]);
-        this.ready = false;
         this.reconnect = false;
+        this.ready = false;
     }
 }
 
