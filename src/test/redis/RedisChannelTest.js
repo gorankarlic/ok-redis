@@ -1,11 +1,22 @@
 "use strict";
 
 const assert = require("assert");
+const child_process = require("child_process");
 const RedisChannel = require("../../main/redis/RedisChannel");
 const RedisClient = require("../../main/redis/RedisClient");
 
 describe("RedisChannel", function()
 {
+    before(function()
+    {
+        child_process.execSync(`redis-server --port 6379 --appendonly no --daemonize yes`, {stdio: "ignore"});
+    });
+
+    after(function()
+    {
+        child_process.execSync(`redis-cli -p 6379 shutdown nosave`);
+    });
+
     describe("connect with server", function()
     {
         it("should connect, subscribe and receive message", function(done)

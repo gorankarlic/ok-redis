@@ -1,10 +1,22 @@
 "use strict";
 
 const assert = require("assert");
+const child_process = require("child_process");
 const Redis = require("../../main/redis/Redis");
 
 describe("Redis", async function()
 {
+    before(function()
+    {
+        child_process.execSync(`redis-server --port 6379 --appendonly no --daemonize yes`, {stdio: "ignore"});
+        child_process.execSync(`sleep 1`);
+    });
+
+    after(function()
+    {
+        child_process.execSync(`redis-cli -p 6379 shutdown nosave`);
+    });
+
     it("ping (async)", async function()
     {
         const client = await Redis.connect();
@@ -58,13 +70,13 @@ describe("Redis", async function()
         {
             assert.strictEqual(err, null);
             const multi = client.multi();
-            multi.del("a");
+            multi.flushdb();
             multi.lpush("a", "b");
             multi.lrange("a", 0, 1);
             multi.exec((err, result) =>
             {
                 assert.strictEqual(err, null);
-                assert.deepStrictEqual(result, [1, 1, [Buffer.from("b")]]);
+                assert.deepStrictEqual(result, ["OK", 1, [Buffer.from("b")]]);
                 client.quit(done);
             });
         });

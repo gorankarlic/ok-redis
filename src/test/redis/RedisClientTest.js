@@ -1,10 +1,21 @@
 "use strict";
 
 const assert = require("assert");
+const child_process = require("child_process");
 const RedisClient = require("../../main/redis/RedisClient");
 
 describe("RedisClient", function()
 {
+    before(function()
+    {
+        child_process.execSync(`redis-server --port 6379 --appendonly no --daemonize yes`);
+    });
+
+    after(function()
+    {
+        child_process.execSync(`redis-cli -p 6379 shutdown nosave`);
+    });
+
     describe("connect", function()
     {
         it("should connect and quit", function(done)
@@ -22,7 +33,7 @@ describe("RedisClient", function()
             });
         });
 
-        it("should not reconnect if no connected once", function(done)
+        it("should not reconnect if not connected once", function(done)
         {
             const opts =
             {
