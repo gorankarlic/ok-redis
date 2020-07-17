@@ -81,4 +81,24 @@ describe("Redis", async function()
             });
         });
     });
+
+    it("should throw error with tracable stack (async)", async function()
+    {
+        const client = await Redis.connect();
+        await client.set("a", "b");
+        try
+        {
+            await client.lrange("a", 0, 1);
+            assert.fail();
+        }
+        catch(e)
+        {
+            assert.match(e.stack, /^RedisError: WRONGTYPE/);
+            assert.match(e.stack, /RedisTest\.js/);
+        }
+        finally
+        {
+            await client.quit();
+        }
+    });
 });
