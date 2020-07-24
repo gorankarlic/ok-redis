@@ -24,7 +24,7 @@ describe("RedisChannel", function()
             const opts =
             {
                 port: 6379,
-                returns: Buffer
+                type: Buffer
             };
             const subscriber = new RedisChannel(opts);
             subscriber.dispatch((channel, message) =>

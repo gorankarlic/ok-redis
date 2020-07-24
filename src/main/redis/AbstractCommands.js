@@ -42,7 +42,7 @@ class AbstractCommands
         }
         catch(e)
         {
-            Error.captureStackTrace(e);
+            Error.captureStackTrace(e, AbstractCommands.prototype._p);
             throw e;
         }
     }

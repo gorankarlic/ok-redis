@@ -30,13 +30,21 @@ class AbstractCommands
      *
      * @param {Array} args the command arguments.
      */
-    _p(args)
+    async _p(args)
     {
-        return new Promise((resolve, reject) =>
+        try
         {
-            args.push((err, result) => err === null ? resolve(result) : reject(err));
-            this._c(args);
-        });
+            return await new Promise((resolve, reject) =>
+            {
+                args.push((err, result) => err === null ? resolve(result) : reject(err));
+                this._c(args);
+            });
+        }
+        catch(e)
+        {
+            Error.captureStackTrace(e, AbstractCommands.prototype._p);
+            throw e;
+        }
     }
 
     /**
@@ -236,7 +244,7 @@ class AbstractCommands
     }
 
     /**
-     * ASKING 
+     * ASKING
      *
      * (fast)
      * (arity 1, first key 0, last key 0)
@@ -4349,7 +4357,7 @@ class AbstractCommands
     }
 
     /**
-     * PFSELFTEST 
+     * PFSELFTEST
      *
      * (admin)
      * (arity 1, first key 0, last key 0)
@@ -6323,7 +6331,7 @@ class AbstractCommands
     }
 
     /**
-     * SUBSTR key arg arg 
+     * SUBSTR key arg arg
      *
      * (readonly)
      * (arity 4, first key 1, last key 1)
@@ -7263,7 +7271,7 @@ class AbstractCommands
     }
 
     /**
-     * XSETID key arg 
+     * XSETID key arg
      *
      * (write, denyoom, fast)
      * (arity 3, first key 1, last key 1)

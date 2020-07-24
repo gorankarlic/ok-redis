@@ -264,7 +264,7 @@ class Cluster
     /**
      * Quits all cluster connections gracefully.
      *
-     * @param {Function} done the function to call when the client quits.
+     * @param {Function} done the function to call when all client have quit.
      */
     quit(done)
     {
@@ -300,6 +300,46 @@ class Cluster
         this.nodes = null;
         this.slots = null;
     };
+
+    /**
+     * Terminates all cluster connections forcefully.
+     *
+     * @param {Function} done the function to call when all connections have been closed.
+     */
+    terminate(done)
+    {
+        if(this.client === null)
+        {
+            return;
+        }
+        let run = 0;
+        let runs = 1;
+        const ran = () =>
+        {
+            if(++run === runs)
+            {
+                if(done !== void null)
+                {
+                    done(null);
+                }
+            }
+        };
+        if(this.nodes !== null)
+        {
+            for(let nodeList of this.nodes.values())
+            {
+                for(let n = 0; n < nodeList.length; n++)
+                {
+                    nodeList[n].terminate(ran);
+                    runs++;
+                }
+            }
+        }
+        this.client.terminate(ran);
+        this.client = null;
+        this.nodes = null;
+        this.slots = null;
+    }
 
     /**
      * Determines the node to use for the operation.

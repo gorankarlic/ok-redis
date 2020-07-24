@@ -44,7 +44,7 @@ describe("RedisCluster", function()
             {
                 host: "localhost",
                 port: 30001,
-                returns: Buffer
+                type: Buffer
             };
             const client = new RedisCluster(opts);
             await client.connect();
@@ -64,7 +64,7 @@ describe("RedisCluster", function()
             {
                 host: "localhost",
                 port: 30001,
-                returns: Buffer
+                type: Buffer
             };
             const client = new RedisCluster(opts);
             await client.connect();

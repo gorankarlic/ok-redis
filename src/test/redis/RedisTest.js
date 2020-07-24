@@ -42,7 +42,7 @@ describe("Redis", async function()
     it("echo buffer (async)", async function()
     {
         const client = await Redis.connect();
-        const echo = await client.echo("Test");
+        const echo = await client.return(Buffer).echo("Test");
         assert.deepStrictEqual(echo, Buffer.from("Test"));
         await client.quit();
     });
@@ -50,16 +50,16 @@ describe("Redis", async function()
     it("echo string (async)", async function()
     {
         const client = await Redis.connect();
-        const echo = await client.string().echo("Test");
+        const echo = await client.return(String).echo("Test");
         assert.strictEqual(echo, "Test");
         await client.quit();
     });
 
     it("list string (async)", async function()
     {
-        const client = await Redis.connect();
-        await client.string().lpush("test", "b", "a");
-        const list = await client.string().lrange("test", 0, 1);
+        const client = await Redis.connect().return(String);
+        await client.lpush("test", "b", "a");
+        const list = await client.lrange("test", 0, 1);
         assert.deepStrictEqual(list, ["a", "b"]);
         await client.quit();
     });

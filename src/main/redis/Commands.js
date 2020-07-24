@@ -18,59 +18,43 @@ class Commands extends AbstractCommands
     }
 
     /**
-     * Command variants that return a buffer.
+     * Sets the return type to either Buffer or String.
      *
-     * @returns {Redis} the command variants that return a buffer.
+     * @param {Object} type the Redis command return type.
      */
-    buffer()
+    return(type)
     {
-        return this;
-    }
-
-    /**
-     * Command variants that return a UTF-8 string.
-     *
-     * @returns {Redis} the command variants that return a UTF-8 string.
-     */
-    string()
-    {
-        return new Strings(this._client);
+        switch(type)
+        {
+            case Buffer:
+            {
+                this._c = Commands.prototype._c;
+                return this;
+            }
+            case String:
+            {
+                this._c = Strings.prototype._c;
+                return this;
+            }
+            default:
+            {
+                throw new Error("return type must be Buffer or String");
+            }
+        }
     }
 }
 
 /**
- * UTF-8 string commands.
+ * Command variant that returns a UTF-8 string instead of a Buffer.
  */
-class Strings extends Commands
+class Strings
 {
     /**
      * Creates a new instance of this class.
-     *
-     * @param {Client} client the Redis client that will run the commands.
      */
-    constructor(client)
+    constructor()
     {
-        super(client);
-    }
-
-    /**
-     * Command variants that return a buffer.
-     *
-     * @returns {Redis} the command variants that return a buffer.
-     */
-    buffer()
-    {
-        return new Commands(this._client);
-    }
-
-    /**
-     * Command variants that return a UTF-8 string.
-     *
-     * @returns {Redis} the command variants that return a UTF-8 string.
-     */
-    string()
-    {
-        return this;
+        throw new Error("can not create an instance of this class");
     }
 
     /**

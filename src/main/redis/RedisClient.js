@@ -85,6 +85,22 @@ class RedisClient extends Commands
             this._client.quit(done);
         }
     }
+    /**
+     * Terminates the client connection forcefully.
+     *
+     * @param {Function} done the function to call when the connection terminates.
+     */
+    terminate(done)
+    {
+        if(done === void null)
+        {
+            return new Promise((resolve, reject) => this._client.terminate((err, result) => err === null ? resolve(result) : reject(err)));
+        }
+        else
+        {
+            this._client.terminate(done);
+        }
+    }
 }
 
 module.exports = RedisClient;

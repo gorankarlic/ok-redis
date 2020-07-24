@@ -14,7 +14,7 @@ class RedisOpts
         {
             host: "localhost",
             port: 6379,
-            returns: Buffer
+            type: Buffer
         };
     }
 
@@ -30,10 +30,25 @@ class RedisOpts
         return this;
     }
 
-    returns(returns)
+    return(type)
     {
-        this.opts.returns = returns;
-        return this;
+        switch(type)
+        {
+            case Buffer:
+            {
+                this.opts.type = type;
+                return this;
+            }
+            case String:
+            {
+                this.opts.type = type;
+                return this;
+            }
+            default:
+            {
+                throw new Error("return type must be Buffer or String");
+            }
+        }
     }
 }
 

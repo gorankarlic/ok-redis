@@ -187,12 +187,12 @@ class RespReader
     /**
      * Creates the RESP reader for the specified return type.
      *
-     * @param {Object} returns the reader return type.
+     * @param {Object} type the reader return type.
      * @returns {RespReader}
      */
-    static createReader(returns)
+    static createReader(type)
     {
-        switch(returns)
+        switch(type)
         {
             case Buffer:
             {
@@ -204,7 +204,7 @@ class RespReader
             }
             default:
             {
-                throw new Error(`illegal reader mode ${returns}`);
+                throw new Error(`illegal reader mode ${type}`);
             }
         }
     }

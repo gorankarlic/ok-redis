@@ -23,7 +23,7 @@ describe("RedisClient", function()
             const opts =
             {
                 port: 6379,
-                returns: Buffer
+                type: Buffer
             };
             const client = new RedisClient(opts);
             client.connect((err) =>
@@ -38,7 +38,7 @@ describe("RedisClient", function()
             const opts =
             {
                 port: 6380,
-                returns: Buffer
+                type: Buffer
             };
             const client = new RedisClient(opts);
             client.connect((err) =>
@@ -53,7 +53,7 @@ describe("RedisClient", function()
             const opts =
             {
                 port: 6379,
-                returns: Buffer
+                type: Buffer
             };
             let ponged = false;
             const client = new RedisClient(opts);
@@ -94,13 +94,13 @@ describe("RedisClient", function()
             const opts =
             {
                 port: 6379,
-                returns: Buffer
+                type: Buffer
             };
             const client = new RedisClient(opts);
             client.connect((err) =>
             {
                 assert.strictEqual(err, null);
-                client.buffer().echo("test", (err, result) =>
+                client.echo("test", (err, result) =>
                 {
                     assert.strictEqual(err, null);
                     assert.deepStrictEqual(result, Buffer.from("test"));
@@ -114,7 +114,7 @@ describe("RedisClient", function()
             const opts =
             {
                 port: 6379,
-                returns: String
+                type: String
             };
             const client = new RedisClient(opts);
             client.connect((err) =>
@@ -130,6 +130,25 @@ describe("RedisClient", function()
         });
     });
 
+    describe("return", function()
+    {
+        it("should return buffer and string", async function()
+        {
+            const opts =
+            {
+                port: 6379,
+                type: Buffer
+            };
+            const client = new RedisClient(opts);
+            await client.connect();
+            const string = await client.return(String).echo("test");
+            assert.deepStrictEqual(string, "test");
+            const buffer = await client.return(Buffer).echo("test");
+            assert.deepStrictEqual(buffer, Buffer.from("test"));
+            await client.quit();
+        });
+    });
+
     describe("commands", function()
     {
         let client;
@@ -139,7 +158,7 @@ describe("RedisClient", function()
             const opts =
             {
                 port: 6379,
-                returns: Buffer
+                type: Buffer
             };
             client = new RedisClient(opts);
             client.connect(done);

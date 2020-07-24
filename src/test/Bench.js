@@ -51,9 +51,9 @@ async function run(runner, f)
     while(true)
     {
         d = await runner(n, f);
-        if(d < 100e6)
+        if(d < 500e6)
         {
-            n *= 10;
+            n *= 2;
         }
         else
         {
@@ -108,7 +108,11 @@ async function main(suites)
         await runCallback(1e6, (f) => f());
         await runSync(1e6, () => 1);
 
-        let onlies = suites.filter(([only]) => only);
+        let onlies = suites.filter((suite) => suite[4].some(([only]) => only));
+        if(onlies.length === 0)
+        {
+            onlies = suites.filter(([only]) => only);
+        }
         if(onlies.length === 0)
         {
             onlies = suites;

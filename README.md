@@ -28,7 +28,7 @@ console.log(value); //prints <Buffer 62 61 72>
 await client.quit();
 ```
 
-### Return a UTF-8 string instead of a buffer for specific commands
+### Switch between returning buffers or UTF-8 strings
 
 ```js
 const Redis = require("Redis");
@@ -36,34 +36,29 @@ const Redis = require("Redis");
 const opts = Redis.opts().host("localhost").port(6379);
 const client = await Redis.connect(opts);
 await client.set("foo", "bar");
-const string = await client.string().get("foo");
-console.log(string); //prints "bar"
-await client.quit();
-```
 
-### Return a buffer instead of a UTF-8 string for specific commands
-
-```js
-const Redis = require("Redis");
-
-const opts = Redis.opts().host("localhost").port(6379);
-const redis = await Redis.connect(opts);
-const client = redis.string();
-await client.set("foo", "bar");
-const buffer = await client.buffer().get("foo");
-console.log(buffer); //prints <Buffer 62 61 72>
-await client.quit();
-```
-
-### Return a UTF-8 string instead of a buffer for all commands
-
-```js
-const Redis = require("Redis");
-
-const opts = Redis.opts().host("localhost").port(6379).returns(String);
-const client = Redis.connect(opts);
-await client.set("foo", "bar");
+client.return(String); //switch to string mode
 const string = await client.get("foo");
 console.log(string); //prints "bar"
+
+client.return(Buffer); //switch to buffer mode
+const string = await client.get("foo");
+console.log(string); //prints <Buffer 62 61 72>
+
+await client.quit();
+```
+
+### Return UTF-8 strings instead of buffers for all commands
+
+```js
+const Redis = require("Redis");
+
+const opts = Redis.opts().host("localhost").port(6379).return(String);
+const client = Redis.connect(opts);
+await client.set("foo", "bar");
+
+const string = await client.get("foo");
+console.log(string); //prints "bar"
+
 await client.quit();
 ```

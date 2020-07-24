@@ -29,7 +29,7 @@ class Client
         this.queue = new Deque();
         this.rb = new RespBuffer(Buffer.allocUnsafe(0));
         this.reconnect = null;
-        this.reader = RespReader.createReader(opts.returns);
+        this.reader = RespReader.createReader(opts.type);
         this.ready = false;
         this.uncorked = true;
         this.uncorker = this.uncork.bind(this);
@@ -173,7 +173,7 @@ class Client
      */
     onerror(error)
     {
-        process.stderr.write(`Redis client ${error.stack}\n`);
+        //process.stderr.write(`Redis client ${error.stack}\n`);
         //throw error;
     }
 
@@ -234,6 +234,18 @@ class Client
     quit(done)
     {
         this.command([0, "QUIT", done]);
+        this.reconnect = false;
+        this.ready = false;
+    }
+
+    /**
+     * Terminates the client connection forcefully.
+     *
+     * @param {Function} done the function to call when the connection terminates.
+     */
+    terminate(done)
+    {
+        this.socket.end(done);
         this.reconnect = false;
         this.ready = false;
     }

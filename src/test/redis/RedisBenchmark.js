@@ -22,16 +22,6 @@ suite("Redis (TCP/IP)", async function()
         client.get("foo", done);
     });
 
-    bench("get (string, async)", async function()
-    {
-        await client.string().get("foo");
-    });
-
-    bench("get (string, callback)", function(done)
-    {
-        client.string().get("foo", done);
-    });
-
     bench("ping (async)", async function()
     {
         await client.ping();
