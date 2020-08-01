@@ -245,9 +245,9 @@ class Client
      */
     terminate(done)
     {
-        this.socket.end(done);
         this.reconnect = false;
         this.ready = false;
+        this.socket.end(() => done(null));
     }
 }
 
