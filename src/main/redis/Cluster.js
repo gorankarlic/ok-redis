@@ -29,6 +29,7 @@ class Cluster
         this.nodes = null;
         this.opts = opts;
         this.slots = null;
+        this.stopped = true;
         this.writer = new RespWriter();
     }
 
@@ -44,6 +45,7 @@ class Cluster
             this.client = new ClusterNode(this, this.opts);
             this.client.connect(done);
             this.reconfigure();
+            this.stopped = false;
         }
         else
         {
@@ -147,6 +149,10 @@ class Cluster
         if(err)
         {
             throw err;
+        }
+        if(this.stopped)
+        {
+            return;
         }
         const nodes = new Map();
         const slots = new Array(16384);
@@ -272,33 +278,7 @@ class Cluster
         {
             throw new Error("not yet connected");
         }
-        let run = 0;
-        let runs = 1;
-        const ran = () =>
-        {
-            if(++run === runs)
-            {
-                if(done !== void null)
-                {
-                    done(null);
-                }
-            }
-        };
-        if(this.nodes !== null)
-        {
-            for(let nodeList of this.nodes.values())
-            {
-                for(let n = 0; n < nodeList.length; n++)
-                {
-                    nodeList[n].quit(ran);
-                    runs++;
-                }
-            }
-        }
-        this.client.quit(ran);
-        this.client = null;
-        this.nodes = null;
-        this.slots = null;
+        this.terminateCluster(done, false);
     };
 
     /**
@@ -310,8 +290,20 @@ class Cluster
     {
         if(this.client === null)
         {
+            done(null);
             return;
         }
+        this.terminateCluster(done, true);
+    }
+
+    /**
+     * Stops all cluster connections.
+     *
+     * @param {Function} done the function to call when all client have stopped.
+     * @param {Boolean} terminate indicates if to use forceful termination.
+     */
+    terminateCluster(done, terminate)
+    {
         let run = 0;
         let runs = 1;
         const ran = () =>
@@ -330,16 +322,32 @@ class Cluster
             {
                 for(let n = 0; n < nodeList.length; n++)
                 {
-                    nodeList[n].terminate(ran);
+                    const node = nodeList[n];
+                    if(terminate)
+                    {
+                        node.terminate(ran);
+                    }
+                    else
+                    {
+                        node.quit(ran);
+                    }
                     runs++;
                 }
             }
         }
-        this.client.terminate(ran);
+        if(terminate)
+        {
+            this.client.terminate(ran);
+        }
+        else
+        {
+            this.client.quit(ran);
+        }
         this.client = null;
         this.nodes = null;
         this.slots = null;
-    }
+        this.stopped = true;
+    };
 
     /**
      * Determines the node to use for the operation.
