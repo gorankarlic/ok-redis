@@ -58,7 +58,7 @@ describe("RedisCluster", function()
 
     describe("connect run batch operations", function()
     {
-        it("should connect", async function()
+        it("should run batch", async function()
         {
             const opts =
             {
@@ -76,6 +76,41 @@ describe("RedisCluster", function()
             await client.quit();
             assert.deepStrictEqual(await set, "OK");
             assert.deepStrictEqual(await get, Buffer.from("bar"));
+        });
+    });
+
+    describe("execute variable key operations", function()
+    {
+        it("should connect", async function()
+        {
+            const opts =
+            {
+                host: "localhost",
+                port: 30001,
+                type: String
+            };
+            const client = new RedisCluster(opts);
+            await client.connect();
+            await client.flushdb();
+            await client.xadd("log", "41153-7", "name", "Picard");
+            const log = await client.xread("STREAMS", "log", 0);
+            await client.quit();
+            const expected =
+            [
+                [
+                    "log",
+                    [
+                        [
+                            "41153-7",
+                            [
+                                "name",
+                                "Picard"
+                            ]
+                        ]
+                    ]
+                ]
+            ];
+            assert.deepStrictEqual(log, expected);
         });
     });
 });

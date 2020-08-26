@@ -221,20 +221,9 @@ class Cluster
         }
         else if(error instanceof RedisMovedError)
         {
-            if(this.client !== null && this.nodes !== null)
-            {
-                for(let nodeList of this.nodes.values())
-                {
-                    for(let n = 0; n < nodeList.length; n++)
-                    {
-                        nodeList[n].quit();
-                    }
-                }
-                this.nodes = null;
-                this.slots = null;
-                this.reconfigure();
-            }
-            this.commands.addLast(args);
+            const slot = error.slot;
+            const node = this.nodeFor(slot);
+            node.command(args);
         }
         else if(callback !== void(null))
         {
