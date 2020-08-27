@@ -754,7 +754,7 @@ class BulkString extends Bulk
      */
     result()
     {
-        return this.r.toString();
+        return this.r === null ? null : this.r.toString();
     }
 }
 
