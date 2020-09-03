@@ -3,6 +3,7 @@
 const Commands = require("./Commands");
 const Cluster = require("./Cluster");
 const ClusterBatch = require("./ClusterBatch");
+const ClusterMasters = require("./ClusterMasters");
 
 /**
  * Redis cluster client API.
@@ -45,7 +46,15 @@ class RedisCluster extends Commands
             this._client.connect(done);
         }
     }
-
+    
+    /**
+     * Run a redis command on all masters.
+     */
+    masters()
+    {
+        return new ClusterMasters(this._client);
+    }
+    
     /**
      * Redis MULTI command queue.
      */
