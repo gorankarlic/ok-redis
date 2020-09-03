@@ -1,11 +1,14 @@
 "use strict";
 
 const assert = require("assert");
+const crypto = require("crypto");
 const child_process = require("child_process");
 const Redis = require("../../main/redis/Redis");
 
 describe("Redis", async function()
 {
+    this.timeout(10000);
+    
     before(function()
     {
         child_process.execSync(`redis-server --port 6379 --appendonly no --daemonize yes`, {stdio: "ignore"});
@@ -15,6 +18,28 @@ describe("Redis", async function()
     after(function()
     {
         child_process.execSync(`redis-cli -p 6379 shutdown nosave`);
+    });
+
+    it("write very large random size buffers", async function()
+    {
+        const client1 = await Redis.connect();
+        const client2 = await Redis.connect();
+        const p = [];
+        for(let n = 0; n < 1024; n++)
+        {
+            const key = crypto.randomBytes(32);
+            const client = Math.random() > 0.5 ? client1 : client2;
+            p.push(client.set(key, crypto.randomBytes(Math.round(Math.random() * 8192))));
+            if(Math.random() > 0.5)
+            {
+                await new Promise((r) => setTimeout(r, 10));
+                await Promise.all(p);
+                p.length = 0;
+            }
+        }
+        await Promise.all(p); 
+        await client1.quit();
+        await client2.quit();
     });
 
     it("ping (async)", async function()
