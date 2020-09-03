@@ -55,20 +55,6 @@ class RespWriter extends OutputBuffer
     }
 
     /**
-     * Writes the specified command.
-     *
-     * @public
-     * @param {Array} args the command arguments.
-     * @return {Buffer} the written RESP command.
-     */
-    writeFast(args)
-    {
-        this.mark();
-        this.write(args);
-        return this.buffer();
-    }
-
-    /**
      * Writes the specified command arguments.
      *
      * @param {Array} args the command arguments.
