@@ -92,6 +92,48 @@ class Cluster
     };
 
     /**
+     * Runs the specified command on all master nodes.
+     *
+     * @public
+     * @param {Array} args the command arguments.
+     */
+    commandMasters(args)
+    {
+        if(this.slots === null)
+        {
+            this.commands.addLast(args);
+        }
+        else
+        {
+            const callback = args[args.length - 1];
+            if(callback instanceof Function)
+            {
+                const n = this.nodes.size;
+                const results = [];
+                args[args.length - 1] = (err, ...result) =>
+                {
+                    if(err === null)
+                    {
+                        results.push(...result);
+                        if(results.length === n)
+                        {
+                            callback(null, results);
+                        }
+                    }
+                    else
+                    {
+                        callback(err);
+                    }
+                };
+            }
+            for(const nodes of this.nodes.values())
+            {
+                nodes[0].command(args);
+            }
+        }
+    };
+
+    /**
      * Runs the specified queue with command arguments.
      *
      * @param {Array} queue the command arguments queue.
@@ -199,7 +241,14 @@ class Cluster
         while(!this.commands.isEmpty())
         {
             const args = this.commands.removeFirst();
-            this.command(args);
+            if(args[0] === 0xFFFF)
+            {
+                this.commandMasters(args);
+            }
+            else
+            {
+                this.command(args);
+            }
         }
     };
 
