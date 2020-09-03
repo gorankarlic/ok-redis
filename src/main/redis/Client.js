@@ -91,13 +91,14 @@ class Client
     {
         if(this.socket.write(this.writer.buffer()))
         {
+            this.uncorked = true;
             this.writer.reset();
         }
         else
         {
+            this.uncorked = false;
             this.writer.mark();
         }
-        this.uncorked = true;
     }
 
     /**
@@ -163,6 +164,7 @@ class Client
      */
     ondrain()
     {
+        this.uncorked = true;
         this.writer.reset();
     }
 
