@@ -109,7 +109,7 @@ class Client
     connect(done)
     {
         this.reconnect = null;
-        console.log("connecting ", this.opts);
+        console.log("connecting ", this.opts.host, this.opts.port);
         this.socket.connect(this.opts, () => done === void null ? void null : done(null));
         this.socket.once("error", (err) => done === void null ? void null : done(err));
     }
