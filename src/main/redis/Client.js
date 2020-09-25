@@ -109,6 +109,7 @@ class Client
     connect(done)
     {
         this.reconnect = null;
+        console.log("connecting ", this.opts);
         this.socket.connect(this.opts, () => done === void null ? void null : done(null));
         this.socket.once("error", (err) => done === void null ? void null : done(err));
     }
@@ -122,6 +123,7 @@ class Client
         this.uncorked = true;
         if(this.reconnect === true && terminate === false)
         {
+            console.log("reconnecting ", this.opts);
             this.socket.connect(this.opts);
         }
         else
