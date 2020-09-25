@@ -314,9 +314,12 @@ class Cluster
     {
         if(this.client === null)
         {
-            throw new Error("not yet connected");
+            done(new Error("not yet connected"));
         }
-        this.terminateCluster(done, false);
+        else
+        {
+            this.terminateCluster(done, false);
+        }
     };
 
     /**
