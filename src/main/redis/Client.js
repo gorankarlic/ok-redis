@@ -175,7 +175,7 @@ class Client
      */
     onerror(error)
     {
-        //process.stderr.write(`Redis client ${error.stack}\n`);
+        process.stderr.write(`Redis client ${error.stack}\n`);
         //throw error;
     }
 
