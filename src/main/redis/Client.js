@@ -25,6 +25,7 @@ class Client
      */
     constructor(opts)
     {
+        this.backoff = 1;
         this.opts = opts;
         this.queue = new Deque();
         this.rb = new RespBuffer(Buffer.allocUnsafe(0));
@@ -109,7 +110,7 @@ class Client
     connect(done)
     {
         this.reconnect = null;
-        console.log("connecting ", this.opts.host, this.opts.port);
+        process.stdout.write(`${new Date().toISOString()} connecting ${this.opts.host}:${this.opts.port}\n`);
         this.socket.connect(this.opts, () => done === void null ? void null : done(null));
         this.socket.once("error", (err) => done === void null ? void null : done(err));
     }
@@ -123,8 +124,8 @@ class Client
         this.uncorked = true;
         if(this.reconnect === true && terminate === false)
         {
-            console.log("reconnecting ", this.opts.host, this.opts.port);
-            this.socket.connect(this.opts);
+            process.stderr.write(`${new Date().toISOString()} reconnecting ${this.opts.host}:${this.opts.port}\n`);
+            setTimeout(() => this.socket.connect(this.opts), this.backoff++).unref();
         }
         else
         {
@@ -139,6 +140,7 @@ class Client
     {
         if(this.reconnect === null)
         {
+            this.backoff = 1;
             this.reconnect = true;
         }
         this.onready();
@@ -177,7 +179,7 @@ class Client
      */
     onerror(error)
     {
-        process.stderr.write(`Redis client ${error.stack}\n`);
+        process.stdout.write(`${new Date().toISOString()} client ${error.stack}\n`);
         //throw error;
     }
 
