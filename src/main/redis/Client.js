@@ -123,7 +123,7 @@ class Client
         this.uncorked = true;
         if(this.reconnect === true && terminate === false)
         {
-            console.log("reconnecting ", this.opts);
+            console.log("reconnecting ", this.opts.host, this.opts.port);
             this.socket.connect(this.opts);
         }
         else
