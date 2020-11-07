@@ -5,6 +5,7 @@ const Deque = require("../util/Deque");
 const Random = require("../util/Random");
 const RespWriter = require("./RespWriter");
 const RedisAskError = require("./RedisAskError");
+const RedisError = require("./RedisError");
 const RedisMovedError = require("./RedisMovedError");
 
 /**
@@ -165,8 +166,15 @@ class Cluster
     {
         const sid = slot === -1 ? Cluster.random(16384) : slot;
         const nodes = this.slots[sid];
-        const index = Cluster.nodeForOp(nodes.length, this.mode, rw);
-        return nodes[index];
+        if(nodes === void null)
+        {
+            throw new RedisError(`no nodes for slot ${sid}`);
+        }
+        else
+        {
+            const index = Cluster.nodeForOp(nodes.length, this.mode, rw);
+            return nodes[index];
+        }
     };
 
     /**
