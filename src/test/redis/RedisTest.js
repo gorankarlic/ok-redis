@@ -8,7 +8,7 @@ const Redis = require("../../main/redis/Redis");
 describe("Redis", async function()
 {
     this.timeout(10000);
-    
+
     before(function()
     {
         child_process.execSync(`redis-server --port 6379 --appendonly no --daemonize yes`, {stdio: "ignore"});
@@ -37,7 +37,7 @@ describe("Redis", async function()
                 p.length = 0;
             }
         }
-        await Promise.all(p); 
+        await Promise.all(p);
         await client1.quit();
         await client2.quit();
     });
@@ -52,7 +52,7 @@ describe("Redis", async function()
 
     it("ping (callback)", function(done)
     {
-        const client = Redis.connect(Redis.opts(), (err, result) =>
+        Redis.connect(Redis.opts(), (err, client) =>
         {
             assert.strictEqual(err, null);
             client.ping(async (err, pong) =>
@@ -82,7 +82,8 @@ describe("Redis", async function()
 
     it("list string (async)", async function()
     {
-        const client = await Redis.connect().return(String);
+        const opts = Redis.opts().return(String);
+        const client = await Redis.connect(opts);
         await client.lpush("test", "b", "a");
         const list = await client.lrange("test", 0, 1);
         assert.deepStrictEqual(list, ["a", "b"]);
@@ -91,7 +92,7 @@ describe("Redis", async function()
 
     it("multi (callback)", function(done)
     {
-        const client = Redis.connect(Redis.opts(), (err, result) =>
+        Redis.connect(Redis.opts(), (err, client) =>
         {
             assert.strictEqual(err, null);
             const multi = client.multi();
