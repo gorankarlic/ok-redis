@@ -42,7 +42,7 @@ class AbstractCommands
         }
         catch(e)
         {
-            Error.captureStackTrace(e, AbstractCommands.prototype._p);
+            Error.captureStackTrace(e);
             throw e;
         }
     }
@@ -101,6 +101,30 @@ class AbstractCommands
      *
      * ----
      *
+     * ACL GETUSER username
+     *
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
+     *
+     * Get the rules for a specific ACL user.
+     *
+     * @see http://redis.io/commands/acl
+     * @since 6.0.0
+     *
+     * ----
+     *
+     * ACL HELP -
+     *
+     * (admin, noscript, loading, stale, skip_slowlog)
+     * (arity -2, first key 0, last key 0)
+     *
+     * Show helpful text about the different subcommands.
+     *
+     * @see http://redis.io/commands/acl
+     * @since 6.0.0
+     *
+     * ----
+     *
      * ACL LIST -
      *
      * (admin, noscript, loading, stale, skip_slowlog)
@@ -149,7 +173,7 @@ class AbstractCommands
      *
      * ----
      *
-     * ACL SETUSER rule [rule ...]
+     * ACL SETUSER username [rule [rule ...]]
      *
      * (admin, noscript, loading, stale, skip_slowlog)
      * (arity -2, first key 0, last key 0)
@@ -233,7 +257,11 @@ class AbstractCommands
      */
     append(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("APPEND: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "APPEND", arg0, arg1]);
         }
@@ -244,7 +272,7 @@ class AbstractCommands
     }
 
     /**
-     * ASKING
+     * ASKING 
      *
      * (fast)
      * (arity 1, first key 0, last key 0)
@@ -845,7 +873,7 @@ class AbstractCommands
      *
      * ----
      *
-     * CLIENT KILL [ip:port] [ID client-id] [TYPE normal|master|slave|pubsub] [ADDR ip:port] [SKIPME yes/no]
+     * CLIENT KILL [ip:port] [ID client-id] [TYPE normal|master|slave|pubsub] [USER username] [ADDR ip:port] [SKIPME yes/no]
      *
      * (admin, noscript, random, loading, stale)
      * (arity -2, first key 0, last key 0)
@@ -889,7 +917,7 @@ class AbstractCommands
      * Instruct the server whether to reply to commands.
      *
      * @see http://redis.io/commands/client
-     * @since 3.2
+     * @since 3.2.0
      *
      * ----
      *
@@ -905,7 +933,7 @@ class AbstractCommands
      *
      * ----
      *
-     * CLIENT TRACKING ON|OFF [REDIRECT client-id] [PREFIX prefix] [BCAST] [OPTIN] [OPTOUT] [NOLOOP]
+     * CLIENT TRACKING ON|OFF [REDIRECT client-id] [PREFIX prefix [PREFIX prefix ...]] [BCAST] [OPTIN] [OPTOUT] [NOLOOP]
      *
      * (admin, noscript, random, loading, stale)
      * (arity -2, first key 0, last key 0)
@@ -1517,7 +1545,11 @@ class AbstractCommands
      */
     decr(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("DECR: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "DECR", arg0]);
         }
@@ -1543,7 +1575,11 @@ class AbstractCommands
      */
     decrby(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("DECRBY: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "DECRBY", arg0, arg1]);
         }
@@ -1637,7 +1673,11 @@ class AbstractCommands
      */
     dump(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("DUMP: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "DUMP", arg0]);
         }
@@ -1662,7 +1702,11 @@ class AbstractCommands
      */
     echo(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("ECHO: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10000, "ECHO", arg0]);
         }
@@ -1839,7 +1883,11 @@ class AbstractCommands
      */
     expire(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("EXPIRE: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "EXPIRE", arg0, arg1]);
         }
@@ -1865,7 +1913,11 @@ class AbstractCommands
      */
     expireat(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("EXPIREAT: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "EXPIREAT", arg0, arg1]);
         }
@@ -2301,7 +2353,11 @@ class AbstractCommands
      */
     get(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("GET: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "GET", arg0]);
         }
@@ -2327,7 +2383,11 @@ class AbstractCommands
      */
     getbit(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("GETBIT: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "GETBIT", arg0, arg1]);
         }
@@ -2390,7 +2450,11 @@ class AbstractCommands
      */
     getset(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("GETSET: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "GETSET", arg0, arg1]);
         }
@@ -2502,7 +2566,11 @@ class AbstractCommands
      */
     hexists(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("HEXISTS: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "HEXISTS", arg0, arg1]);
         }
@@ -2528,7 +2596,11 @@ class AbstractCommands
      */
     hget(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("HGET: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "HGET", arg0, arg1]);
         }
@@ -2553,7 +2625,11 @@ class AbstractCommands
      */
     hgetall(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("HGETALL: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "HGETALL", arg0]);
         }
@@ -2652,7 +2728,11 @@ class AbstractCommands
      */
     hkeys(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("HKEYS: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "HKEYS", arg0]);
         }
@@ -2677,7 +2757,11 @@ class AbstractCommands
      */
     hlen(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("HLEN: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "HLEN", arg0]);
         }
@@ -2942,7 +3026,11 @@ class AbstractCommands
      */
     hstrlen(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("HSTRLEN: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "HSTRLEN", arg0, arg1]);
         }
@@ -2967,7 +3055,11 @@ class AbstractCommands
      */
     hvals(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("HVALS: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "HVALS", arg0]);
         }
@@ -2992,7 +3084,11 @@ class AbstractCommands
      */
     incr(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("INCR: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "INCR", arg0]);
         }
@@ -3018,7 +3114,11 @@ class AbstractCommands
      */
     incrby(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("INCRBY: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "INCRBY", arg0, arg1]);
         }
@@ -3044,7 +3144,11 @@ class AbstractCommands
      */
     incrbyfloat(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("INCRBYFLOAT: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "INCRBYFLOAT", arg0, arg1]);
         }
@@ -3115,7 +3219,11 @@ class AbstractCommands
      */
     keys(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("KEYS: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10000, "KEYS", arg0]);
         }
@@ -3210,7 +3318,7 @@ class AbstractCommands
      *
      * ----
      *
-     * LATENCY RESET [event]
+     * LATENCY RESET [event [event ...]]
      *
      * (admin, noscript, loading, stale)
      * (arity -2, first key 0, last key 0)
@@ -3270,7 +3378,11 @@ class AbstractCommands
      */
     lindex(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("LINDEX: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "LINDEX", arg0, arg1]);
         }
@@ -3333,7 +3445,11 @@ class AbstractCommands
      */
     llen(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("LLEN: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "LLEN", arg0]);
         }
@@ -3404,7 +3520,11 @@ class AbstractCommands
      */
     lpop(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("LPOP: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "LPOP", arg0]);
         }
@@ -3412,6 +3532,47 @@ class AbstractCommands
         {
             this._c([0x20001, "LPOP", arg0, callback]);
         }
+    }
+
+    /**
+     * LPOS key element [RANK rank] [COUNT num-matches] [MAXLEN len]
+     *
+     * (readonly)
+     * (arity -3, first key 1, last key 1)
+     *
+     * Return the index of matching elements on a list.
+     *
+     * @see http://redis.io/commands/lpos
+     * @since 6.0.6
+     */
+    lpos()
+    {
+        let args;
+        const len = arguments.length;
+        switch(len)
+        {
+            case 0:
+            case 1:
+            {
+                throw new Error("LPOS: wrong number of arguments");
+            }
+            case 2:
+            {
+                args = [0x10001, "LPOS", arguments[0], arguments[1]];
+                break;
+            }
+            default:
+            {
+                args = new Array(len + 2);
+                args[0] = 0x10001;
+                args[1] = "LPOS";
+                for(let n = 0; n < len; n++)
+                {
+                    args[n+2] = arguments[n];
+                }
+            }
+        }
+        return this._r(args);
     }
 
     /**
@@ -3942,7 +4103,11 @@ class AbstractCommands
      */
     move(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("MOVE: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "MOVE", arg0, arg1]);
         }
@@ -4118,7 +4283,11 @@ class AbstractCommands
      */
     persist(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("PERSIST: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "PERSIST", arg0]);
         }
@@ -4144,7 +4313,11 @@ class AbstractCommands
      */
     pexpire(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("PEXPIRE: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "PEXPIRE", arg0, arg1]);
         }
@@ -4170,7 +4343,11 @@ class AbstractCommands
      */
     pexpireat(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("PEXPIREAT: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "PEXPIREAT", arg0, arg1]);
         }
@@ -4357,7 +4534,7 @@ class AbstractCommands
     }
 
     /**
-     * PFSELFTEST
+     * PFSELFTEST 
      *
      * (admin)
      * (arity 1, first key 0, last key 0)
@@ -4570,7 +4747,11 @@ class AbstractCommands
      */
     psync(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("PSYNC: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x0, "PSYNC", arg0, arg1]);
         }
@@ -4595,7 +4776,11 @@ class AbstractCommands
      */
     pttl(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("PTTL: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "PTTL", arg0]);
         }
@@ -4621,7 +4806,11 @@ class AbstractCommands
      */
     publish(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("PUBLISH: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x0, "PUBLISH", arg0, arg1]);
         }
@@ -4851,7 +5040,11 @@ class AbstractCommands
      */
     rename(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("RENAME: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "RENAME", arg0, arg1]);
         }
@@ -4877,7 +5070,11 @@ class AbstractCommands
      */
     renamenx(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("RENAMENX: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "RENAMENX", arg0, arg1]);
         }
@@ -4949,7 +5146,11 @@ class AbstractCommands
      */
     replicaof(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("REPLICAOF: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x0, "REPLICAOF", arg0, arg1]);
         }
@@ -5072,7 +5273,11 @@ class AbstractCommands
      */
     rpop(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("RPOP: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "RPOP", arg0]);
         }
@@ -5098,7 +5303,11 @@ class AbstractCommands
      */
     rpoplpush(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("RPOPLPUSH: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "RPOPLPUSH", arg0, arg1]);
         }
@@ -5315,7 +5524,11 @@ class AbstractCommands
      */
     scard(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("SCARD: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "SCARD", arg0]);
         }
@@ -5519,7 +5732,11 @@ class AbstractCommands
      */
     select(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("SELECT: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x0, "SELECT", arg0]);
         }
@@ -5660,7 +5877,11 @@ class AbstractCommands
      */
     setnx(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("SETNX: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "SETNX", arg0, arg1]);
         }
@@ -5855,7 +6076,11 @@ class AbstractCommands
      */
     sismember(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("SISMEMBER: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "SISMEMBER", arg0, arg1]);
         }
@@ -5881,7 +6106,11 @@ class AbstractCommands
      */
     slaveof(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("SLAVEOF: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x0, "SLAVEOF", arg0, arg1]);
         }
@@ -5951,7 +6180,11 @@ class AbstractCommands
      */
     smembers(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("SMEMBERS: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "SMEMBERS", arg0]);
         }
@@ -6275,7 +6508,11 @@ class AbstractCommands
      */
     strlen(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("STRLEN: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "STRLEN", arg0]);
         }
@@ -6331,7 +6568,7 @@ class AbstractCommands
     }
 
     /**
-     * SUBSTR key arg arg
+     * SUBSTR key arg arg 
      *
      * (readonly)
      * (arity 4, first key 1, last key 1)
@@ -6469,7 +6706,11 @@ class AbstractCommands
      */
     swapdb(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("SWAPDB: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20000, "SWAPDB", arg0, arg1]);
         }
@@ -6587,7 +6828,11 @@ class AbstractCommands
      */
     ttl(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("TTL: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "TTL", arg0]);
         }
@@ -6612,7 +6857,11 @@ class AbstractCommands
      */
     type(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("TYPE: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "TYPE", arg0]);
         }
@@ -6716,7 +6965,7 @@ class AbstractCommands
     /**
      * UNWATCH -
      *
-     * (noscript, fast)
+     * (noscript, loading, stale, fast)
      * (arity 1, first key 0, last key 0)
      *
      * Forget about all watched keys.
@@ -6753,7 +7002,11 @@ class AbstractCommands
      */
     wait(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("WAIT: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x0, "WAIT", arg0, arg1]);
         }
@@ -6766,7 +7019,7 @@ class AbstractCommands
     /**
      * WATCH key [key ...]
      *
-     * (noscript, fast)
+     * (noscript, loading, stale, fast)
      * (arity -2, first key 1, last key -1)
      *
      * Watch the given keys to determine execution of the MULTI/EXEC block.
@@ -7068,7 +7321,11 @@ class AbstractCommands
      */
     xlen(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("XLEN: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "XLEN", arg0]);
         }
@@ -7271,7 +7528,7 @@ class AbstractCommands
     }
 
     /**
-     * XSETID key arg
+     * XSETID key arg 
      *
      * (write, denyoom, fast)
      * (arity 3, first key 1, last key 1)
@@ -7286,7 +7543,11 @@ class AbstractCommands
      */
     xsetid(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("XSETID: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x20001, "XSETID", arg0, arg1]);
         }
@@ -7393,7 +7654,11 @@ class AbstractCommands
      */
     zcard(arg0, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null)
+        {
+            throw new Error("ZCARD: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "ZCARD", arg0]);
         }
@@ -7768,7 +8033,11 @@ class AbstractCommands
      */
     zrank(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("ZRANK: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "ZRANK", arg0, arg1]);
         }
@@ -8057,7 +8326,11 @@ class AbstractCommands
      */
     zrevrank(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("ZREVRANK: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "ZREVRANK", arg0, arg1]);
         }
@@ -8124,7 +8397,11 @@ class AbstractCommands
      */
     zscore(arg0, arg1, callback)
     {
-        if(callback === void null)
+        if(arg0 === void null || arg1 === void null)
+        {
+            throw new Error("ZSCORE: wrong number of arguments");
+        }
+        else if(callback === void null)
         {
             return this._p([0x10001, "ZSCORE", arg0, arg1]);
         }

@@ -70,10 +70,7 @@ Delete a key asynchronously in another thread. Otherwise it is just as DEL, but 
 WAIT numreplicas timeout
 Wait for the synchronous replication of all the write commands sent in the context of the current connection
 3.0.0
-PFSELFTEST 
-Help not available
-not known
-GEORADIUSBYMEMBER_RO key arg arg arg ...options...
+RESTORE-ASKING key arg arg ...options...
 Help not available
 not known
 GEORADIUS_RO key arg arg arg arg ...options...
@@ -82,28 +79,31 @@ not known
 REPLCONF ...options...
 Help not available
 not known
-PFDEBUG arg arg ...options...
+SUBSTR key arg arg 
 Help not available
 not known
-RESTORE-ASKING key arg arg ...options...
-Help not available
-not known
-POST ...options...
+XSETID key arg 
 Help not available
 not known
 BITFIELD_RO key ...options...
 Help not available
 not known
-HOST: ...options...
+PFSELFTEST 
 Help not available
 not known
-SUBSTR key arg arg 
+POST ...options...
 Help not available
 not known
 ASKING 
 Help not available
 not known
-XSETID key arg 
+GEORADIUSBYMEMBER_RO key arg arg arg ...options...
+Help not available
+not known
+PFDEBUG arg arg ...options...
+Help not available
+not known
+HOST: ...options...
 Help not available
 not known
 APPEND key value
@@ -202,6 +202,9 @@ Get the length of a list
 LPOP key
 Remove and get the first element in a list
 1.0.0
+LPOS key element [RANK rank] [COUNT num-matches] [MAXLEN len]
+Return the index of matching elements on a list
+6.0.6
 LPUSH key element [element ...]
 Prepend one or multiple elements to a list
 1.0.0
@@ -445,7 +448,7 @@ Get tracking notifications redirection client ID if any
 CLIENT ID -
 Returns the client ID for the current connection
 5.0.0
-CLIENT KILL [ip:port] [ID client-id] [TYPE normal|master|slave|pubsub] [ADDR ip:port] [SKIPME yes/no]
+CLIENT KILL [ip:port] [ID client-id] [TYPE normal|master|slave|pubsub] [USER username] [ADDR ip:port] [SKIPME yes/no]
 Kill the connection of a client
 2.4.0
 CLIENT LIST [TYPE normal|master|replica|pubsub]
@@ -456,11 +459,11 @@ Stop processing commands from clients for some time
 2.9.50
 CLIENT REPLY ON|OFF|SKIP
 Instruct the server whether to reply to commands
-3.2
+3.2.0
 CLIENT SETNAME connection-name
 Set the current connection name
 2.6.9
-CLIENT TRACKING ON|OFF [REDIRECT client-id] [PREFIX prefix] [BCAST] [OPTIN] [OPTOUT] [NOLOOP]
+CLIENT TRACKING ON|OFF [REDIRECT client-id] [PREFIX prefix [PREFIX prefix ...]] [BCAST] [OPTIN] [OPTOUT] [NOLOOP]
 Enable or disable server assisted client side caching support
 6.0.0
 CLIENT UNBLOCK client-id [TIMEOUT|ERROR]
@@ -490,6 +493,12 @@ Remove the specified ACL users and the associated rules
 ACL GENPASS [bits]
 Generate a pseudorandom secure password to use for ACL users
 6.0.0
+ACL GETUSER username
+Get the rules for a specific ACL user
+6.0.0
+ACL HELP -
+Show helpful text about the different subcommands
+6.0.0
 ACL LIST -
 List the current ACL rules in ACL config file format
 6.0.0
@@ -502,7 +511,7 @@ List latest events denied because of ACLs in place
 ACL SAVE -
 Save the current ACL rules in the configured ACL file
 6.0.0
-ACL SETUSER rule [rule ...]
+ACL SETUSER username [rule [rule ...]]
 Modify or create the rules for a specific ACL user
 6.0.0
 ACL USERS -
@@ -577,7 +586,7 @@ Return timestamp-latency samples for the event.
 LATENCY LATEST -
 Return the latest latency samples for all events.
 2.8.13
-LATENCY RESET [event]
+LATENCY RESET [event [event ...]]
 Reset latency data for one or more events.
 2.8.13
 LOLWUT [VERSION version]
