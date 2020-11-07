@@ -3,8 +3,8 @@
   "contributors": [],
   "name": "ok-redis",
   "private": true,
-  "license": "CC-BY-NC-SA-4.0",
-  "version": "0.9.0",
+  "license": "CC-BY-SA-4.0",
+  "version": "0.9.3",
   "dependencies": {},
   "repository": "https://github.com/gorankarlic/ok-redis.git",
   "scripts": {
