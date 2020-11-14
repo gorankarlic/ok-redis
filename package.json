@@ -24,11 +24,12 @@
     "jsdoc": "3.6.6",
     "mocha": "8.2.1",
     "noderis": "^0.9.8",
-    "npm-check-updates": "^9.2.4",
+    "npm-check-updates": "^10.0.0",
     "nyc": "^15.1.0",
     "pngjs": "6.0.0",
     "redis": "^3.0.2",
     "redis-fast-driver": "^2.1.5",
+    "sinon": "^9.2.1",
     "tedis": "^0.1.12"
   }
 }

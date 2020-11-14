@@ -30,7 +30,6 @@ class Cluster
         this.nodes = null;
         this.opts = opts;
         this.slots = null;
-        this.stopped = true;
         this.writer = new RespWriter();
     }
 
@@ -44,29 +43,12 @@ class Cluster
         if(this.client === null)
         {
             this.client = new ClusterNode(this, this.opts);
-            this.client.connect(done);
-            this.reconfigure();
-            this.stopped = false;
+            this.client.connect((err) => err === null ? this.reconfigure(done) : done(err));
         }
         else
         {
-            throw new Error("already connected");
+            done(new Error("already connected"));
         }
-    };
-
-    /**
-     * Connects a single node in the cluster.
-     *
-     * @private
-     * @param {Array} hostPort the host and port for the node.
-     * @returns {Client} the node client.
-     */
-    connectNode(hostPort)
-    {
-        const host = hostPort[0].toString("utf8");
-        const port = hostPort[1];
-        const opts = Object.assign({}, this.opts, {host: host, port: port});
-        return new ClusterNode(this, opts);
     };
 
     /**
@@ -155,6 +137,21 @@ class Cluster
     };
 
     /**
+     * Creates a single node in the cluster.
+     *
+     * @private
+     * @param {Array} hostPort the host and port for the node.
+     * @returns {Client} the node client.
+     */
+    createNode(hostPort)
+    {
+        const host = hostPort[0].toString("utf8");
+        const port = hostPort[1];
+        const opts = Object.assign({}, this.opts, {host: host, port: port});
+        return new ClusterNode(this, opts);
+    };
+
+    /**
      * Determines the node to use for the operation.
      *
      * @private
@@ -179,31 +176,26 @@ class Cluster
 
     /**
      * Reconfigures the cluster nodes and updates the slots.
+     *
+     * @private
+     * @param {Function} done the function to call when connected.
      */
-    reconfigure()
+    reconfigure(done)
     {
+        const next = (err, results) => err === null ? this.reconnectNodes(results).then(() => done(null)).catch((err) => this.client.quit(() => done(err))) : done(err);
         this.nodes = null;
         this.slots = null;
-        this.client.command([0, "CLUSTER", "SLOTS", this.reconnectNodes.bind(this)]);
+        this.client.command([0, "CLUSTER", "SLOTS", next]);
     };
 
     /**
      * Connects with all nodes in the cluster and set up the slot-node mapping.
      *
      * @private
-     * @param {Error} err the error that occured.
      * @param {Array} results the list of cluster slots and nodes.
      */
-    reconnectNodes(err, results)
+    async reconnectNodes(results)
     {
-        if(err)
-        {
-            throw err;
-        }
-        if(this.stopped)
-        {
-            return;
-        }
         const nodes = new Map();
         const slots = new Array(16384);
         for(let n = 0; n < results.length; n++)
@@ -213,18 +205,14 @@ class Cluster
             const slot1 = result[1];
             const master = result[2];
             const masterUUID = master[2].toString("ascii");
-            let nodeList = nodes.get(masterUUID);
-            if(nodeList === void(null))
+            const nodeList = [this.createNode(master)];
+            for(let j = 3; j < result.length; j++)
             {
-                nodeList = [this.connectNode(master)];
-                for(let j = 3; j < result.length; j++)
-                {
-                    let slave = result[j];
-                    let slaveNode = this.connectNode(slave);
-                    nodeList.push(slaveNode);
-                }
-                nodes.set(masterUUID, nodeList);
+                const slave = result[j];
+                const slaveNode = this.createNode(slave);
+                nodeList.push(slaveNode);
             }
+            nodes.set(masterUUID, nodeList);
             for(let k = slot0; k <= slot1; k++)
             {
                 slots[k] = nodeList;
@@ -235,28 +223,41 @@ class Cluster
         {
             ordered.push(slots[slot]);
         }
-        for(let nodeList of nodes.values())
+        const promises = [];
+        for(const nodeList of nodes.values())
         {
             for(let n = 0; n < nodeList.length; n++)
             {
                 const node = nodeList[n];
-                node.connect();
+                const next = new Promise((resolve, reject) => node.connect((err) => err === null ? resolve(node) : reject(err)));
                 node.command([0, "READWRITE"]);
+                promises.push(next);
             }
         }
-        this.nodes = nodes;
-        this.slots = ordered;
-        while(!this.commands.isEmpty())
+        const settled = await Promise.allSettled(promises);
+        const success = settled.every(({reason}) => reason === void null);
+        if(success)
         {
-            const args = this.commands.removeFirst();
-            if(args[0] === 0xFFFF)
+            this.nodes = nodes;
+            this.slots = ordered;
+            while(!this.commands.isEmpty())
             {
-                this.commandMasters(args);
+                const args = this.commands.removeFirst();
+                if(args[0] === 0xFFFF)
+                {
+                    this.commandMasters(args);
+                }
+                else
+                {
+                    this.command(args);
+                }
             }
-            else
-            {
-                this.command(args);
-            }
+        }
+        else
+        {
+            const teardown = settled.filter(({reason}) => reason === void null).map(({value}) => new Promise((resolve) => value.quit(() => resolve())));
+            await Promise.all(teardown);
+            await Promise.all(promises);
         }
     };
 
@@ -395,7 +396,6 @@ class Cluster
         this.client = null;
         this.nodes = null;
         this.slots = null;
-        this.stopped = true;
     };
 
     /**

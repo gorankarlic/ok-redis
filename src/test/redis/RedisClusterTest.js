@@ -2,11 +2,13 @@
 
 const assert = require("assert");
 const child_process = require("child_process");
+const sinon = require("sinon");
+const Cluster = require("../../main/redis/Cluster");
 const RedisCluster = require("../../main/redis/RedisCluster");
 
 describe("RedisCluster", function()
 {
-    this.timeout(10000);
+    this.timeout(60000);
 
     before(function()
     {
@@ -55,6 +57,103 @@ describe("RedisCluster", function()
         });
     });
 
+    describe("fail to connect with server due to ECONNREFUSED", function()
+    {
+        let connectNode;
+        
+        before(function()
+        {
+            connectNode = sinon.stub(Cluster.prototype, "connectNode");
+            connectNode.withArgs(sinon.match.array.contains([30001])).callsFake(function(hostPort)
+            {
+                return connectNode.wrappedMethod.call(this, [hostPort[0], 12345, hostPort[2]]);
+            });
+            connectNode.callThrough();
+        });
+
+        after(function()
+        {
+            connectNode.restore();
+        });
+        
+        it("should fail to connect", async function()
+        {
+            const opts =
+            {
+                host: "localhost",
+                port: 30001,
+                type: Buffer
+            };
+            const client = new RedisCluster(opts);
+            await assert.rejects(client.connect(), /^Error: connect ECONNREFUSED 127.0.0.1:12345/);
+        });
+    });
+
+    describe("fail to connect with server due to ENETUNREACH", function()
+    {
+        let connectNode;
+        
+        before(function()
+        {
+            connectNode = sinon.stub(Cluster.prototype, "connectNode");
+            connectNode.withArgs(sinon.match.array.contains([30001])).callsFake(function(hostPort)
+            {
+                return connectNode.wrappedMethod.call(this, ["10.123.123.123", hostPort[1], hostPort[2]]);
+            });
+            connectNode.callThrough();
+        });
+
+        after(function()
+        {
+            connectNode.restore();
+        });
+        
+        it("should fail to connect", async function()
+        {
+            const opts =
+            {
+                host: "localhost",
+                port: 30001,
+                type: Buffer
+            };
+            const client = new RedisCluster(opts);
+            await assert.rejects(client.connect(), /^Error: connect ENETUNREACH 10.123.123.123:30001/);
+        });
+    });
+
+
+    describe("fail to connect with server due to ETIMEDOUT", function()
+    {
+        let connectNode;
+        
+        before(function()
+        {
+            connectNode = sinon.stub(Cluster.prototype, "connectNode");
+            connectNode.withArgs(sinon.match.array.contains([30001])).callsFake(function(hostPort)
+            {
+                return connectNode.wrappedMethod.call(this, ["127.123.123.123", hostPort[1], hostPort[2]]);
+            });
+            connectNode.callThrough();
+        });
+
+        after(function()
+        {
+            connectNode.restore();
+        });
+        
+        it("should fail to connect", async function()
+        {
+            const opts =
+            {
+                host: "localhost",
+                port: 30001,
+                type: Buffer
+            };
+            const client = new RedisCluster(opts);
+            await assert.rejects(client.connect(), /^Error: connect ETIMEDOUT 127.123.123.123:30001/);
+        });
+    });
+
     describe("connect run batch operations", function()
     {
         it("should run batch", async function()
@@ -89,7 +188,7 @@ describe("RedisCluster", function()
             };
             const client = new RedisCluster(opts);
             await client.connect();
-            await client.flushdb();
+            await client.masters().flushdb();
             await client.xadd("log", "41153-7", "name", "Picard");
             const log = await client.xread("STREAMS", "log", 0);
             await client.quit();

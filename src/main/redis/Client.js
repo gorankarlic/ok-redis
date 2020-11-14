@@ -25,11 +25,10 @@ class Client
      */
     constructor(opts)
     {
-        this.backoff = 1;
+        this.connected = false;
         this.opts = opts;
         this.queue = new Deque();
         this.rb = new RespBuffer(Buffer.allocUnsafe(0));
-        this.reconnect = null;
         this.reader = RespReader.createReader(opts.type);
         this.ready = false;
         this.uncorked = true;
@@ -109,10 +108,12 @@ class Client
      */
     connect(done)
     {
-        this.reconnect = null;
         process.stdout.write(`${new Date().toISOString()} connecting ${this.opts.host}:${this.opts.port}\n`);
+        this.socket.setTimeout(10000, () => this.socket.destroy());
         this.socket.connect(this.opts, () => done === void null ? void null : done(null));
+        this.socket.once("connect", () => this.socket.setTimeout(0));
         this.socket.once("error", (err) => done === void null ? void null : done(err));
+        this.socket.once("timeout", () => done === void null ? void null : done(new Error(`connect ETIMEDOUT ${this.opts.host}:${this.opts.port}`)));
     }
 
     /**
@@ -120,17 +121,10 @@ class Client
      */
     onclose()
     {
+        this.connected = false;
         this.ready = false;
         this.uncorked = true;
-        if(this.reconnect === true && terminate === false)
-        {
-            process.stderr.write(`${new Date().toISOString()} reconnecting ${this.opts.host}:${this.opts.port}\n`);
-            setTimeout(() => this.socket.connect(this.opts), this.backoff++).unref();
-        }
-        else
-        {
-            this.writer.realloc(this.writer.n);
-        }
+        this.writer.realloc(this.writer.n);
     }
 
     /**
@@ -138,10 +132,9 @@ class Client
      */
     onconnect()
     {
-        if(this.reconnect === null)
+        if(this.connected === false)
         {
-            this.backoff = 1;
-            this.reconnect = true;
+            this.connected = true;
         }
         this.onready();
     }
@@ -179,8 +172,12 @@ class Client
      */
     onerror(error)
     {
-        process.stdout.write(`${new Date().toISOString()} client ${error.stack}\n`);
-        //throw error;
+        if(this.connected)
+        {
+            process.stdout.write(`${new Date().toISOString()} client ${error.stack}\n`);
+            this.connected = false;
+            throw error;
+        }
     }
 
     /**
@@ -240,7 +237,7 @@ class Client
     quit(done)
     {
         this.command([0, "QUIT", done]);
-        this.reconnect = false;
+        this.connected = false;
         this.ready = false;
     }
 
@@ -251,7 +248,7 @@ class Client
      */
     terminate(done)
     {
-        this.reconnect = false;
+        this.connected = false;
         this.ready = false;
         this.socket.end(() => done(null));
     }
