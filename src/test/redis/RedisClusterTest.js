@@ -59,21 +59,21 @@ describe("RedisCluster", function()
 
     describe("fail to connect with server due to ECONNREFUSED", function()
     {
-        let connectNode;
+        let createNode;
         
         before(function()
         {
-            connectNode = sinon.stub(Cluster.prototype, "connectNode");
-            connectNode.withArgs(sinon.match.array.contains([30001])).callsFake(function(hostPort)
+            createNode = sinon.stub(Cluster.prototype, "createNode");
+            createNode.withArgs(sinon.match.array.contains([30001])).callsFake(function(hostPort)
             {
-                return connectNode.wrappedMethod.call(this, [hostPort[0], 12345, hostPort[2]]);
+                return createNode.wrappedMethod.call(this, [hostPort[0], 12345, hostPort[2]]);
             });
-            connectNode.callThrough();
+            createNode.callThrough();
         });
 
         after(function()
         {
-            connectNode.restore();
+            createNode.restore();
         });
         
         it("should fail to connect", async function()
@@ -91,21 +91,21 @@ describe("RedisCluster", function()
 
     describe("fail to connect with server due to ENETUNREACH", function()
     {
-        let connectNode;
+        let createNode;
         
         before(function()
         {
-            connectNode = sinon.stub(Cluster.prototype, "connectNode");
-            connectNode.withArgs(sinon.match.array.contains([30001])).callsFake(function(hostPort)
+            createNode = sinon.stub(Cluster.prototype, "createNode");
+            createNode.withArgs(sinon.match.array.contains([30001])).callsFake(function(hostPort)
             {
-                return connectNode.wrappedMethod.call(this, ["10.123.123.123", hostPort[1], hostPort[2]]);
+                return createNode.wrappedMethod.call(this, ["10.123.123.123", hostPort[1], hostPort[2]]);
             });
-            connectNode.callThrough();
+            createNode.callThrough();
         });
 
         after(function()
         {
-            connectNode.restore();
+            createNode.restore();
         });
         
         it("should fail to connect", async function()
@@ -124,21 +124,21 @@ describe("RedisCluster", function()
 
     describe("fail to connect with server due to ETIMEDOUT", function()
     {
-        let connectNode;
+        let createNode;
         
         before(function()
         {
-            connectNode = sinon.stub(Cluster.prototype, "connectNode");
-            connectNode.withArgs(sinon.match.array.contains([30001])).callsFake(function(hostPort)
+            createNode = sinon.stub(Cluster.prototype, "createNode");
+            createNode.withArgs(sinon.match.array.contains([30001])).callsFake(function(hostPort)
             {
-                return connectNode.wrappedMethod.call(this, ["127.123.123.123", hostPort[1], hostPort[2]]);
+                return createNode.wrappedMethod.call(this, ["127.123.123.123", hostPort[1], hostPort[2]]);
             });
-            connectNode.callThrough();
+            createNode.callThrough();
         });
 
         after(function()
         {
-            connectNode.restore();
+            createNode.restore();
         });
         
         it("should fail to connect", async function()
