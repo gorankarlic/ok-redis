@@ -25,6 +25,7 @@ describe("RedisCluster", function()
         }
         const hosts = host.join(" ");
         child_process.execSync(`printf "yes" | redis-cli --cluster create ${hosts} --cluster-replicas 1`, {stdio: "ignore"});
+        child_process.execSync(`sleep 1`);
     });
 
     after(function()
@@ -211,7 +212,25 @@ describe("RedisCluster", function()
         });
     });
 
-    describe("run command all masters", function()
+    describe("run command all nodes", function()
+    {
+        it("should run command", async function()
+        {
+            const opts =
+            {
+                host: "localhost",
+                port: 30001,
+                type: String
+            };
+            const client = new RedisCluster(opts);
+            await client.connect();
+            const status = await client.nodes().ping("A");
+            await client.quit();
+            assert.deepStrictEqual(status, ["A", "A", "A", "A", "A", "A"]);
+        });
+    });
+
+    describe("run command all master nodes", function()
     {
         it("should run command", async function()
         {

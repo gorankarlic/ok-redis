@@ -75,6 +75,24 @@ class Cluster
     };
 
     /**
+     * Runs the specified command on all nodes.
+     *
+     * @public
+     * @param {Array} args the command arguments.
+     */
+    commandAll(args)
+    {
+        if(this.slots === null)
+        {
+            this.commands.addLast(args);
+        }
+        else
+        {
+            this.commandNodes(Array.from(this.nodes.values()).flat(), args);
+        }
+    };
+
+    /**
      * Runs the specified command on all master nodes.
      *
      * @public
@@ -88,31 +106,41 @@ class Cluster
         }
         else
         {
-            const callback = args[args.length - 1];
-            if(callback instanceof Function)
+            this.commandNodes(Array.from(this.nodes.values()).map(([m]) => m), args);
+        }
+    };
+
+    /**
+     * Runs the specified command on all specified nodes.
+     *
+     * @public
+     * @param {Array} nodes the notes to send command to.
+     * @param {Array} args the command arguments.
+     */
+    commandNodes(nodes, args)
+    {
+        const callback = args[args.length - 1];
+        if(callback instanceof Function)
+        {
+            const results = [];
+            args[args.length - 1] = (err, ...result) =>
             {
-                const n = this.nodes.size;
-                const results = [];
-                args[args.length - 1] = (err, ...result) =>
+                if(err === null)
                 {
-                    if(err === null)
+                    if(results.push(...result) === nodes.length)
                     {
-                        results.push(...result);
-                        if(results.length === n)
-                        {
-                            callback(null, results);
-                        }
+                        callback(null, results);
                     }
-                    else
-                    {
-                        callback(err);
-                    }
-                };
-            }
-            for(const nodes of this.nodes.values())
-            {
-                nodes[0].command(args);
-            }
+                }
+                else
+                {
+                    callback(err);
+                }
+            };
+        }
+        for(const node of nodes)
+        {
+            node.command(args);
         }
     };
 
@@ -243,13 +271,22 @@ class Cluster
             while(!this.commands.isEmpty())
             {
                 const args = this.commands.removeFirst();
-                if(args[0] === 0xFFFF)
+                switch(args[0])
                 {
-                    this.commandMasters(args);
-                }
-                else
-                {
-                    this.command(args);
+                    case 0xFFFF:
+                    {
+                        this.commandAll(args);
+                        break;
+                    }
+                    case 0xFFFE:
+                    {
+                        this.commandMasters(args);
+                        break;
+                    }
+                    default:
+                    {
+                        this.command(args);
+                    }
                 }
             }
         }

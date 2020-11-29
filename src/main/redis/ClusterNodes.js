@@ -3,9 +3,9 @@
 const Commands = require("./Commands");
 
 /**
- * Redis cluster operation that runs on all master nodes.
+ * Redis cluster operation that runs on all nodes.
  */
-class ClusterMasters extends Commands
+class ClusterNodes extends Commands
 {
     /**
      * Creates a new instance of this class.
@@ -19,9 +19,9 @@ class ClusterMasters extends Commands
 
     _c(args)
     {
-        args[0] = 0xFFFE;
-        this._client.commandMasters(args);
+        args[0] = 0xFFFF;
+        this._client.commandAll(args);
     }
 }
 
-module.exports = ClusterMasters;
+module.exports = ClusterNodes;

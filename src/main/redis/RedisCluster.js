@@ -4,6 +4,7 @@ const Commands = require("./Commands");
 const Cluster = require("./Cluster");
 const ClusterBatch = require("./ClusterBatch");
 const ClusterMasters = require("./ClusterMasters");
+const ClusterNodes = require("./ClusterNodes");
 
 /**
  * Redis cluster client API.
@@ -61,6 +62,14 @@ class RedisCluster extends Commands
     multi()
     {
         throw new Error("not implemented yet");
+    }
+
+    /**
+     * Run a redis command on all nodes.
+     */
+    nodes()
+    {
+        return new ClusterNodes(this._client);
     }
 
     /**
